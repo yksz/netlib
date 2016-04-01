@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+# Project
+build/
+eclipse/
+eclipse-mingw/
+.project
