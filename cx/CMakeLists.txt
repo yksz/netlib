@@ -8,6 +8,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 option(build_tests "Build all of own tests." OFF)
 option(build_examples "Build example programs." OFF)
 
+include(cmake/project.cmake)
+
 ### Library
 include_directories(
     ${PROJECT_SOURCE_DIR}/src
