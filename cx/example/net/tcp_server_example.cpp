@@ -9,12 +9,9 @@ using namespace cx;
 static void handle(const std::shared_ptr<TCPSocket>& clientsock) {
     std::cout << "ThreadID = " << std::this_thread::get_id() << std::endl;
 
-    char buf[256];
-    int size;
-    while ((size = clientsock->Read(buf, sizeof(buf))) > 0) {
-        for (int i = 0; i < size; i++) {
-            printf("%c", buf[i]);
-        }
+    char buf[8];
+    while (clientsock->ReadLine(buf, sizeof(buf))) {
+        printf("%s", buf);
     }
     clientsock->Close();
 }

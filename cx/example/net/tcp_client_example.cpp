@@ -23,8 +23,8 @@ int main(int argc, char** argv) {
     if (socket != nullptr) {
         socket->SetSocketTimeout(10000);
         for (int i = 0; i < kSendCount; i++) {
-            socket->Write(msg, strlen(msg));
-            socket->Write("\n", 1);
+            socket->WriteFully(msg, strlen(msg));
+            socket->WriteFully("\n", 1);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
         socket->Close();
