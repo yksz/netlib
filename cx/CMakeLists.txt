@@ -16,6 +16,7 @@ include_directories(
 )
 set(source_files
     ${PROJECT_SOURCE_DIR}/src/cx/io/binary.cpp
+    ${PROJECT_SOURCE_DIR}/src/cx/io/stream.cpp
 )
 if(WIN32)
     set(source_files ${source_files}
