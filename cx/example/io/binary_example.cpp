@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <cstring>
 #include <iostream>
 #include "cx/io/binary.h"
 
@@ -10,8 +9,8 @@ int main(void) {
 
     // write
     ByteConverter w(buf, sizeof(buf), ByteOrder_BIG_ENDIAN);
-    const char* str1 = "abcd";
-    w.Put(str1, strlen(str1) + 1);
+    const char str1[] = "abcd";
+    w.Put(str1, sizeof(str1));
     w.PutUint8(1);
     w.PutUint16(2);
     w.PutUint32(3);
