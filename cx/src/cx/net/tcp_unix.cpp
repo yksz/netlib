@@ -2,7 +2,6 @@
 #include <cassert>
 #include <cerrno>
 #include <csignal>
-#include <cstdio>
 #include <cstring>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -27,13 +26,13 @@ static void initOnce() {
     s_initialized = true;
 }
 
-std::shared_ptr<TCPSocket> ConnectWithTCP(const char* host, int port, int timeout) {
+error ConnectWithTCP(const char* host, int port, int timeout,
+        std::shared_ptr<TCPSocket>* clientsock) {
     initOnce();
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        perror("socket");
-        return nullptr;
+        return GetOSError(errno);
     }
 
     struct sockaddr_in serverAddr;
@@ -42,11 +41,13 @@ std::shared_ptr<TCPSocket> ConnectWithTCP(const char* host, int port, int timeou
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(host);
 
+    int err = 0;
+
     ioctl(sockfd, FIONBIO, &kNonBlockingMode);
     if (connect(sockfd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
         if (errno == EINPROGRESS || errno == EALREADY || errno == EINTR) {
         } else {
-            perror("connect");
+            err = errno;
             goto fail;
         }
     }
@@ -60,51 +61,45 @@ std::shared_ptr<TCPSocket> ConnectWithTCP(const char* host, int port, int timeou
         connTimeout.tv_sec = timeout / 1000;
         connTimeout.tv_usec = timeout % 1000 * 1000;
 
-        errno = 0;
-        int result = select(sockfd + 1, NULL, &writefds, NULL, &connTimeout);
-        if (result == -1) {
-            perror("select");
+        if (select(sockfd + 1, NULL, &writefds, NULL, &connTimeout) == -1) {
+            err = errno;
             goto fail;
         } else if (FD_ISSET(sockfd, &writefds)) {
             int soerr;
             socklen_t len = sizeof(soerr);
             getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &soerr, &len);
-            if (soerr != 0) {
-                fprintf(stderr, "getsockopt: %s\n", strerror(soerr));
-                goto fail;
-            }
-            if (errno == EINPROGRESS || errno == EALREADY || errno == EINTR) {
+            if (soerr == EINPROGRESS || soerr == EALREADY || soerr == EINTR) {
                 continue;
-            } else if (errno == 0 || errno == EISCONN) {
+            } else if (soerr == 0 || soerr == EISCONN) {
                 ioctl(sockfd, FIONBIO, &kBlockingMode);
-                return std::make_shared<UnixTCPSocket>(sockfd);
+                *clientsock = std::make_shared<UnixTCPSocket>(sockfd, std::string(host));
+                return error::nil;
             } else {
+                err = soerr;
                 goto fail;
             }
         } else {
-            fprintf(stderr, "connect: timeout\n");
+            err = ETIMEDOUT;
             goto fail;
         }
     }
 
 fail:
     close(sockfd);
-    return nullptr;
+    return GetOSError(err);
 }
 
-std::unique_ptr<TCPListener> ListenWithTCP(int port) {
+error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serversock) {
     initOnce();
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
-        perror("socket");
-        return nullptr;
+        return GetOSError(errno);
     }
 
     int soval = 1;
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &soval, sizeof(soval)) == -1) {
-        perror("setsockopt");
-        return nullptr;
+        goto fail;
     }
 
     struct sockaddr_in serverAddr;
@@ -114,70 +109,75 @@ std::unique_ptr<TCPListener> ListenWithTCP(int port) {
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(sockfd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-        perror("bind");
-        return nullptr;
+        goto fail;
     }
 
     if (listen(sockfd, SOMAXCONN)) {
-        perror("listen");
-        return nullptr;
+        goto fail;
+    } else {
+        *serversock = std::unique_ptr<UnixTCPListener>(new UnixTCPListener(sockfd));
+        return error::nil;
     }
 
-    printf("Listening on port %d\n", port);
-    return std::unique_ptr<UnixTCPListener>(new UnixTCPListener(sockfd));
+fail:
+    int err = errno;
+    close(sockfd);
+    return GetOSError(err);
 }
-
 
 UnixTCPSocket::~UnixTCPSocket() {
     Close();
 }
 
-void UnixTCPSocket::Close() {
+error UnixTCPSocket::Close() {
     if (m_closed) {
-        return;
+        return error::nil;
     }
 
-    int result = close(m_sockfd);
-    if (result == -1) {
-        perror("close");
+    if (close(m_sockfd) == -1) {
+        return GetOSError(errno);
     }
     m_closed = true;
+    return error::nil;
 }
 
 bool UnixTCPSocket::IsClosed() {
     return m_closed;
 }
 
-int UnixTCPSocket::Read(char* buf, size_t len) {
+error UnixTCPSocket::Read(char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
-        return -1;
+        return error::illegal_state;
     }
 
-    int result = recv(m_sockfd, buf, len, 0);
-    if (result == -1) {
-        perror("recv");
+    *nbytes = recv(m_sockfd, buf, len, 0);
+    if (*nbytes == 0) {
+        return error::eof;
+    } else if (*nbytes == -1) {
+        return GetOSError(errno);
+    } else {
+        return error::nil;
     }
-    return result;
 }
 
-int UnixTCPSocket::Write(const char* buf, size_t len) {
+error UnixTCPSocket::Write(const char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
-        return -1;
+        return error::illegal_state;
     }
 
-    int result = send(m_sockfd, buf, len, 0);
-    if (result == -1) {
-        perror("send");
+    *nbytes = send(m_sockfd, buf, len, 0);
+    if (*nbytes == -1) {
+        return GetOSError(errno);
     }
-    return result;
+    return error::nil;
 }
 
-bool UnixTCPSocket::SetSocketTimeout(int timeout) {
+error UnixTCPSocket::SetSocketTimeout(int timeout) {
     if (m_closed) {
         assert(0 && "Already closed");
-        return false;
+        return error::illegal_state;
     }
 
     struct timeval soTimeout;
@@ -186,50 +186,47 @@ bool UnixTCPSocket::SetSocketTimeout(int timeout) {
 
     int rcvResult = setsockopt(m_sockfd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout));
     if (rcvResult == -1) {
-        perror("setsockopt");
-        return false;
+        return GetOSError(errno);
     }
     int sndResult = setsockopt(m_sockfd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout));
     if (sndResult == -1) {
-        perror("setsockopt");
-        return false;
+        return GetOSError(errno);
     }
-    return true;
+    return error::nil;
 }
-
 
 UnixTCPListener::~UnixTCPListener() {
     Close();
 }
 
-void UnixTCPListener::Close() {
+error UnixTCPListener::Close() {
     if (m_closed) {
-        return;
+        return error::nil;
     }
 
-    int result = close(m_sockfd);
-    if (result == -1) {
-        perror("close");
+    if (close(m_sockfd) == -1) {
+        GetOSError(errno);
     }
     m_closed = true;
+    return error::nil;
 }
 
 bool UnixTCPListener::IsClosed() {
     return m_closed;
 }
 
-std::shared_ptr<TCPSocket> UnixTCPListener::Accept() {
+error UnixTCPListener::Accept(std::shared_ptr<TCPSocket>* clientsock) {
     struct sockaddr_in clientAddr;
     socklen_t len = sizeof(clientAddr);
 
     int clientfd = accept(m_sockfd, (struct sockaddr*) &clientAddr, &len);
     if (clientfd == -1) {
-        perror("accept");
-        return nullptr;
+        return GetOSError(errno);
     }
 
-    printf("%s connected\n", inet_ntoa(clientAddr.sin_addr));
-    return std::make_shared<UnixTCPSocket>(clientfd);
+    std::string host = inet_ntoa(clientAddr.sin_addr);
+    *clientsock = std::make_shared<UnixTCPSocket>(clientfd, std::move(host));
+    return error::nil;
 }
 
 } // namespace cx

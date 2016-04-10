@@ -15,6 +15,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src
 )
 set(source_files
+    ${PROJECT_SOURCE_DIR}/src/cx/error.cpp
     ${PROJECT_SOURCE_DIR}/src/cx/io/binary.cpp
     ${PROJECT_SOURCE_DIR}/src/cx/io/stream.cpp
 )

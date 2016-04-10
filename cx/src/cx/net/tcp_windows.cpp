@@ -1,7 +1,7 @@
 #include "cx/net/tcp_windows.h"
 #include <cassert>
 #include <cstdio>
-#include <cstdlib>
+#include <cstring>
 #include <winsock2.h>
 
 #pragma comment(lib, "ws2_32.lib")
@@ -31,14 +31,13 @@ static void initOnce() {
     s_initialized = true;
 }
 
-std::shared_ptr<TCPSocket> ConnectWithTCP(const char* host, int port, int timeout) {
+error ConnectWithTCP(const char* host, int port, int timeout,
+        std::shared_ptr<TCPSocket>* clientsock) {
     initOnce();
 
-    SOCKET sock;
-    sock = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
-        fprintf(stderr, "ERROR: socket: %d\n", WSAGetLastError());
-        return nullptr;
+        return GetOSError(WSAGetLastError());
     }
 
     struct sockaddr_in serverAddr;
@@ -47,10 +46,14 @@ std::shared_ptr<TCPSocket> ConnectWithTCP(const char* host, int port, int timeou
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = inet_addr(host);
 
+    int err = 0;
+
     ioctlsocket(sock, FIONBIO, &kNonBlockingMode);
     if (connect(sock, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        fprintf(stderr, "ERROR: connect: %d\n", WSAGetLastError());
-        goto fail;
+        err = WSAGetLastError();
+        if (err != WSAEWOULDBLOCK) {
+            goto fail;
+        }
     }
 
     fd_set writefds;
@@ -61,35 +64,35 @@ std::shared_ptr<TCPSocket> ConnectWithTCP(const char* host, int port, int timeou
     connTimeout.tv_sec = timeout / 1000;
     connTimeout.tv_usec = timeout % 1000 * 1000;
 
-    int result = select(0, NULL, &writefds, NULL, &connTimeout);
-    if (result == SOCKET_ERROR) {
-        fprintf(stderr, "ERROR: select: %d\n", WSAGetLastError());
+    if (select(0, NULL, &writefds, NULL, &connTimeout) == SOCKET_ERROR) {
+        err = WSAGetLastError();
         goto fail;
     } else if (FD_ISSET(sock, &writefds)) {
         ioctlsocket(sock, FIONBIO, &kBlockingMode);
-        return std::make_shared<WindowsTCPSocket>(sock);
+        *clientsock = std::make_shared<WindowsTCPSocket>(sock, std::string(host));
+        return error::nil;
     } else {
-        fprintf(stderr, "connect: timeout\n");
+        err = WSAETIMEDOUT;
         goto fail;
     }
 
 fail:
     closesocket(sock);
-    return nullptr;
+    return GetOSError(err);
 }
 
-std::unique_ptr<TCPListener> ListenWithTCP(int port) {
+error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serversock) {
     initOnce();
 
-    SOCKET sock;
-    sock = socket(AF_INET, SOCK_STREAM, 0);
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
-        fprintf(stderr, "ERROR: socket: %d\n", WSAGetLastError());
-        return nullptr;
+        return GetOSError(WSAGetLastError());
     }
 
     BOOL soval = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &soval, sizeof(soval));
+    if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*) &soval, sizeof(soval)) == SOCKET_ERROR) {
+        goto fail;
+    }
 
     struct sockaddr_in serverAddr;
     memset(&serverAddr, 0, sizeof(serverAddr));
@@ -98,120 +101,120 @@ std::unique_ptr<TCPListener> ListenWithTCP(int port) {
     serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 
     if (bind(sock, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        fprintf(stderr, "ERROR: bind: %d\n", WSAGetLastError());
-        return nullptr;
+        goto fail;
     }
 
     if (listen(sock, SOMAXCONN) == SOCKET_ERROR) {
-        fprintf(stderr, "ERROR: listen: %d\n", WSAGetLastError());
-        return nullptr;
+        goto fail;
+    } else {
+        *serversock = std::unique_ptr<WindowsTCPListener>(new WindowsTCPListener(sock));
+        return error::nil;
     }
 
-    printf("Listening on port %d\n", port);
-    return std::unique_ptr<WindowsTCPListener>(new WindowsTCPListener(sock));
+fail:
+    int err = WSAGetLastError();
+    closesocket(sock);
+    return GetOSError(err);
 }
-
 
 WindowsTCPSocket::~WindowsTCPSocket() {
     Close();
 }
 
-void WindowsTCPSocket::Close() {
+error WindowsTCPSocket::Close() {
     if (m_closed) {
-        return;
+        return error::nil;
     }
 
-    int result = closesocket(m_sock);
-    if (result == -1) {
-        fprintf(stderr, "ERROR: close: %d\n", WSAGetLastError());
+    if (closesocket(m_sock) == SOCKET_ERROR) {
+        return GetOSError(WSAGetLastError());
     }
     m_closed = true;
+    return error::nil;
 }
 
 bool WindowsTCPSocket::IsClosed() {
     return m_closed;
 }
 
-int WindowsTCPSocket::Read(char* buf, size_t len) {
+error WindowsTCPSocket::Read(char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
-        return -1;
+        return error::illegal_state;
     }
 
-    int result = recv(m_sock, buf, len, 0);
-    if (result == -1) {
-        fprintf(stderr, "ERROR: recv: %d\n", WSAGetLastError());
+    *nbytes = recv(m_sock, buf, len, 0);
+    if (*nbytes == 0) {
+        return error::eof;
+    } else if (*nbytes == SOCKET_ERROR) {
+        return GetOSError(errno);
+    } else {
+        return error::nil;
     }
-    return result;
 }
 
-int WindowsTCPSocket::Write(const char* buf, size_t len) {
+error WindowsTCPSocket::Write(const char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
-        return -1;
+        return error::illegal_state;
     }
 
-    int result = send(m_sock, buf, len, 0);
-    if (result == -1) {
-        fprintf(stderr, "ERROR: send: %d\n", WSAGetLastError());
+    *nbytes = send(m_sock, buf, len, 0);
+    if (*nbytes == SOCKET_ERROR) {
+        return GetOSError(WSAGetLastError());
     }
-    return result;
+    return error::nil;
 }
 
-bool WindowsTCPSocket::SetSocketTimeout(int timeout) {
+error WindowsTCPSocket::SetSocketTimeout(int timeout) {
     if (m_closed) {
         assert(0 && "Already closed");
-        return false;
+        return error::illegal_state;
     }
 
     int rcvResult = setsockopt(m_sock, SOL_SOCKET, SO_RCVTIMEO, (const char*) &timeout, sizeof(timeout));
-    if (rcvResult == -1) {
-        fprintf(stderr, "ERROR: setsockopt: %d\n", WSAGetLastError());
-        return false;
+    if (rcvResult == SOCKET_ERROR) {
+        return GetOSError(WSAGetLastError());
     }
     int sndResult = setsockopt(m_sock, SOL_SOCKET, SO_SNDTIMEO, (const char*) &timeout, sizeof(timeout));
-    if (sndResult == -1) {
-        fprintf(stderr, "ERROR: setsockopt: %d\n", WSAGetLastError());
-        return false;
+    if (sndResult == SOCKET_ERROR) {
+        return GetOSError(WSAGetLastError());
     }
-    return true;
+    return error::nil;
 }
-
 
 WindowsTCPListener::~WindowsTCPListener() {
     Close();
 }
 
-void WindowsTCPListener::Close() {
+error WindowsTCPListener::Close() {
     if (m_closed) {
-        return;
+        return error::nil;
     }
 
-    int result = closesocket(m_sock);
-    if (result == -1) {
-        fprintf(stderr, "ERROR: close: %d\n", WSAGetLastError());
+    if (closesocket(m_sock) == SOCKET_ERROR) {
+        return GetOSError(WSAGetLastError());
     }
     m_closed = true;
+    return error::nil;
 }
 
 bool WindowsTCPListener::IsClosed() {
     return m_closed;
 }
 
-std::shared_ptr<TCPSocket> WindowsTCPListener::Accept() {
+error WindowsTCPListener::Accept(std::shared_ptr<TCPSocket>* clientsock) {
     struct sockaddr_in clientAddr;
-    int len;
-    SOCKET clientsock;
+    int len = sizeof(clientAddr);
 
-    len = sizeof(clientAddr);
-    clientsock = accept(m_sock, (struct sockaddr*) &clientAddr, &len);
-    if (clientsock == INVALID_SOCKET) {
-        fprintf(stderr, "ERROR: accept: %d\n", WSAGetLastError());
-        return nullptr;
+    SOCKET sock = accept(m_sock, (struct sockaddr*) &clientAddr, &len);
+    if (sock == INVALID_SOCKET) {
+        return GetOSError(WSAGetLastError());
     }
 
-    printf("%s connected\n", inet_ntoa(clientAddr.sin_addr));
-    return std::make_shared<WindowsTCPSocket>(clientsock);
+    std::string host = inet_ntoa(clientAddr.sin_addr);
+    *clientsock = std::make_shared<WindowsTCPSocket>(sock, std::move(host));
+    return error::nil;
 }
 
 } // namespace cx

@@ -8,19 +8,22 @@ namespace cx {
 
 class WindowsTCPSocket final : public TCPSocket {
 public:
-    explicit WindowsTCPSocket(SOCKET sock) : m_sock(sock), m_closed(false) {};
+    WindowsTCPSocket(SOCKET sock, const std::string& host)
+        : m_sock(sock), m_host(host), m_closed(false) {};
     ~WindowsTCPSocket();
     WindowsTCPSocket(const WindowsTCPSocket&) = delete;
     WindowsTCPSocket& operator=(const WindowsTCPSocket&) = delete;
 
-    void Close();
+    error Close();
     bool IsClosed();
-    int Read(char* buf, size_t len);
-    int Write(const char* buf, size_t len);
-    bool SetSocketTimeout(int timeout);
+    error Read(char* buf, size_t len, int* nbytes);
+    error Write(const char* buf, size_t len, int* nbytes);
+    error SetSocketTimeout(int timeout);
+    std::string GetHost() { return m_host; };
 
 private:
     const SOCKET m_sock;
+    const std::string m_host;
     std::atomic<bool> m_closed;
 };
 
@@ -32,9 +35,9 @@ public:
     WindowsTCPListener(const WindowsTCPListener&) = delete;
     WindowsTCPListener& operator=(const WindowsTCPListener&) = delete;
 
-    void Close();
+    error Close();
     bool IsClosed();
-    std::shared_ptr<TCPSocket> Accept();
+    error Accept(std::shared_ptr<TCPSocket>* clientsock);
 
 private:
     const SOCKET m_sock;

@@ -6,11 +6,21 @@
 
 using namespace cx;
 
+static const int kPort = 8080;
+
 static void handle(const std::shared_ptr<TCPSocket>& clientsock) {
     std::cout << "ThreadID = " << std::this_thread::get_id() << std::endl;
 
     char buf[8];
-    while (clientsock->ReadLine(buf, sizeof(buf))) {
+    while (true) {
+        error err = clientsock->ReadLine(buf, sizeof(buf));
+        if (err == error::eof) {
+            break;
+        }
+        if (err != error::nil) {
+            printf("%s\n", GetErrorMessage(err));
+            break;
+        }
         printf("%s", buf);
     }
     clientsock->Close();
@@ -19,15 +29,25 @@ static void handle(const std::shared_ptr<TCPSocket>& clientsock) {
 int main(void) {
     setvbuf(stdout, NULL, _IONBF, 0);
 
-    std::unique_ptr<TCPListener> listener = ListenWithTCP(8080);
-    if (listener != nullptr) {
-        for (;;) {
-            std::shared_ptr<TCPSocket> socket = listener->Accept();
-            std::thread th([=]() {
-                handle(socket);
-            });
-            th.detach();
-        }
-        listener->Close();
+    std::unique_ptr<TCPListener> listener;
+    error err = ListenWithTCP(kPort, &listener);
+    if (err != error::nil) {
+        printf("%s\n", GetErrorMessage(err));
+        return 1;
     }
+    printf("Listening on port %d\n", kPort);
+    for (;;) {
+        std::shared_ptr<TCPSocket> socket;
+        error err = listener->Accept(&socket);
+        if (err != error::nil) {
+            printf("%s\n", GetErrorMessage(err));
+            continue;
+        }
+        printf("%s connected\n", socket->GetHost().c_str());
+        std::thread th([=]() {
+            handle(socket);
+        });
+        th.detach();
+    }
+    listener->Close();
 }

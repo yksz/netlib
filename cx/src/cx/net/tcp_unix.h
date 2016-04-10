@@ -7,22 +7,24 @@ namespace cx {
 
 class UnixTCPSocket final : public TCPSocket {
 public:
-    explicit UnixTCPSocket(int sockfd) : m_sockfd(sockfd), m_closed(false) {};
+    UnixTCPSocket(int sockfd, const std::string& host)
+        : m_sockfd(sockfd), m_host(host), m_closed(false) {};
     ~UnixTCPSocket();
     UnixTCPSocket(const UnixTCPSocket&) = delete;
     UnixTCPSocket& operator=(const UnixTCPSocket&) = delete;
 
-    void Close();
+    error Close();
     bool IsClosed();
-    int Read(char* buf, size_t len);
-    int Write(const char* buf, size_t len);
-    bool SetSocketTimeout(int timeout);
+    error Read(char* buf, size_t len, int* nbytes);
+    error Write(const char* buf, size_t len, int* nbytes);
+    error SetSocketTimeout(int timeout);
+    std::string GetHost() { return m_host; };
 
 private:
     const int m_sockfd;
+    const std::string m_host;
     std::atomic<bool> m_closed;
 };
-
 
 class UnixTCPListener final : public TCPListener {
 public:
@@ -31,9 +33,9 @@ public:
     UnixTCPListener(const UnixTCPListener&) = delete;
     UnixTCPListener& operator=(const UnixTCPListener&) = delete;
 
-    void Close();
+    error Close();
     bool IsClosed();
-    std::shared_ptr<TCPSocket> Accept();
+    error Accept(std::shared_ptr<TCPSocket>* clientsock);
 
 private:
     const int m_sockfd;

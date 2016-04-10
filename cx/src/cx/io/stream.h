@@ -1,25 +1,36 @@
 #pragma once
 
 #include <cstddef>
+#include "cx/error.h"
 
 namespace cx {
 
 struct Closer {
     virtual ~Closer() {};
-    virtual void Close() = 0;
+    virtual error Close() = 0;
 };
 
 struct Reader {
     virtual ~Reader() {};
-    virtual int Read(char* buf, size_t len) = 0;
-    bool ReadFully(char* buf, size_t len);
-    bool ReadLine(char* buf, size_t len);
+    /**
+     * @param[in] buf
+     * @param[in] len
+     * @param[out] nbytes
+     */
+    virtual error Read(char* buf, size_t len, int* nbytes) = 0;
+    error ReadFully(char* buf, size_t len);
+    error ReadLine(char* buf, size_t len);
 };
 
 struct Writer {
     virtual ~Writer() {};
-    virtual int Write(const char* buf, size_t len) = 0;
-    bool WriteFully(const char* buf, size_t len);
+    /**
+     * @param[in] buf
+     * @param[in] len
+     * @param[out] nbytes
+     */
+    virtual error Write(const char* buf, size_t len, int* nbytes) = 0;
+    error WriteFully(const char* buf, size_t len);
 };
 
 } // namespace cx

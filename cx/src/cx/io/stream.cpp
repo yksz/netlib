@@ -3,59 +3,68 @@
 
 namespace cx {
 
-bool Reader::ReadFully(char* buf, size_t len) {
+error Reader::ReadFully(char* buf, size_t len) {
     if (buf == nullptr) {
         assert(0 && "buf must not be nullptr");
-        return false;
+        return error::illegal_argument;
     }
 
     size_t offset = 0;
-    int size;
-    while ((size = Read(&buf[offset], len - offset)) > 0) {
-        offset += size;
+    int nbytes;
+    while (true) {
+        error err = Read(&buf[offset], len - offset, &nbytes);
+        if (err != error::nil) {
+            return err;
+        }
+        offset += nbytes;
         if (offset >= len) {
-            return true;
+            return error::nil;
         }
     }
-    return false;
 }
 
-bool Reader::ReadLine(char* buf, size_t len) {
+error Reader::ReadLine(char* buf, size_t len) {
     if (buf == nullptr) {
         assert(0 && "buf must not be nullptr");
-        return false;
+        return error::illegal_argument;
     }
 
     size_t offset = 0;
-    int size;
-    while ((size = Read(&buf[offset], 1)) > 0) {
+    int nbytes;
+    while (true) {
+        error err = Read(&buf[offset], 1, &nbytes);
+        if (err != error::nil) {
+            return err;
+        }
         if (buf[offset] == '\n') {
             buf[offset + 1] = '\0';
-            return true;
+            return error::nil;
         }
-        offset += size;
+        offset += nbytes;
         if (offset + 1 >= len) {
-            return true; // buf is full
+            return error::nil; // buf is full
         }
     }
-    return false;
 }
 
-bool Writer::WriteFully(const char* buf, size_t len) {
+error Writer::WriteFully(const char* buf, size_t len) {
     if (buf == nullptr) {
         assert(0 && "buf must not be nullptr");
-        return false;
+        return error::illegal_argument;
     }
 
     size_t offset = 0;
-    int size;
-    while ((size = Write(&buf[offset], len - offset)) > 0) {
-        offset += size;
+    int nbytes;
+    while (true) {
+        error err = Write(&buf[offset], len - offset, &nbytes);
+        if (err != error::nil) {
+            return err;
+        }
+        offset += nbytes;
         if (offset >= len) {
-            return true;
+            return error::nil;
         }
     }
-    return false;
 }
 
 } // namespace cx
