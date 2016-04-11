@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -52,6 +53,9 @@ error ConnectWithTCP(const char* host, int port, int timeout,
         }
     }
 
+    struct timeval prev;
+    gettimeofday(&prev, NULL);
+
     while (true) {
         fd_set writefds, exceptfds;
         FD_ZERO(&writefds);
@@ -86,6 +90,11 @@ error ConnectWithTCP(const char* host, int port, int timeout,
                 goto fail;
             }
         }
+
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        timeout -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
+        prev = now;
     }
 
 fail:
