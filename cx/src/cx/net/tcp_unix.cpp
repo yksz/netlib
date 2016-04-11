@@ -53,21 +53,28 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     }
 
     while (true) {
-        fd_set writefds;
+        fd_set writefds, exceptfds;
         FD_ZERO(&writefds);
+        FD_ZERO(&exceptfds);
         FD_SET(sockfd, &writefds);
+        FD_SET(sockfd, &exceptfds);
 
         struct timeval connTimeout;
         connTimeout.tv_sec = timeout / 1000;
         connTimeout.tv_usec = timeout % 1000 * 1000;
 
-        if (select(sockfd + 1, NULL, &writefds, NULL, &connTimeout) == -1) {
+        errno = 0;
+        int result = select(sockfd + 1, NULL, &writefds, &exceptfds, &connTimeout);
+        if (result == -1) {
             err = errno;
             goto fail;
-        } else if (FD_ISSET(sockfd, &writefds)) {
+        } else if (result == 0) {
+            err = ETIMEDOUT;
+            goto fail;
+        } else {
             int soerr;
-            socklen_t len = sizeof(soerr);
-            getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &soerr, &len);
+            socklen_t optlen = sizeof(soerr);
+            getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &soerr, &optlen);
             if (soerr == EINPROGRESS || soerr == EALREADY || soerr == EINTR) {
                 continue;
             } else if (soerr == 0 || soerr == EISCONN) {
@@ -78,9 +85,6 @@ error ConnectWithTCP(const char* host, int port, int timeout,
                 err = soerr;
                 goto fail;
             }
-        } else {
-            err = ETIMEDOUT;
-            goto fail;
         }
     }
 
