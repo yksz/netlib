@@ -57,23 +57,38 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     }
 
     fd_set writefds;
+    fd_set exceptfds;
     FD_ZERO(&writefds);
+    FD_ZERO(&exceptfds);
     FD_SET(sock, &writefds);
+    FD_SET(sock, &exceptfds);
 
     struct timeval connTimeout;
     connTimeout.tv_sec = timeout / 1000;
     connTimeout.tv_usec = timeout % 1000 * 1000;
 
-    if (select(0, NULL, &writefds, NULL, &connTimeout) == SOCKET_ERROR) {
+    int result = select(0, NULL, &writefds, &exceptfds, &connTimeout);
+    if (result == SOCKET_ERROR) {
         err = WSAGetLastError();
         goto fail;
-    } else if (FD_ISSET(sock, &writefds)) {
+    } else if (result == 0) {
+        err = WSAETIMEDOUT;
+        goto fail;
+    } else if (!FD_ISSET(sock, &exceptfds)) {
+        err = 0;
+    } else {
+        int soerr = 0;
+        int optlen = sizeof(soerr);
+        getsockopt(sock, SOL_SOCKET, SO_ERROR, (char*) &soerr, &optlen);
+        if (soerr != 0) {
+            err = soerr;
+            goto fail;
+        }
+    }
+    if (err == 0) {
         ioctlsocket(sock, FIONBIO, &kBlockingMode);
         *clientsock = std::make_shared<WindowsTCPSocket>(sock, std::string(host));
         return error::nil;
-    } else {
-        err = WSAETIMEDOUT;
-        goto fail;
     }
 
 fail:
