@@ -15,7 +15,7 @@ static void cleanup() {
     WSACleanup();
 }
 
-static void initOnce() {
+static void initializeOnce() {
     static bool s_initialized = false;
     if (s_initialized) {
         return;
@@ -33,7 +33,7 @@ static void initOnce() {
 
 error ConnectWithTCP(const char* host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientsock) {
-    initOnce();
+    initializeOnce();
 
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
@@ -46,13 +46,12 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = inet_addr(host);
 
-    int err = 0;
-
     ioctlsocket(sock, FIONBIO, &kNonBlockingMode);
     if (connect(sock, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        err = WSAGetLastError();
+        int err = WSAGetLastError();
         if (err != WSAEWOULDBLOCK) {
-            goto fail;
+            closesocket(sock);
+            return GetOSError(err);
         }
     }
 
@@ -67,6 +66,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     connTimeout.tv_sec = timeout / 1000;
     connTimeout.tv_usec = timeout % 1000 * 1000;
 
+    int err = 0;
     int result = select(0, NULL, &writefds, &exceptfds, &connTimeout);
     if (result == SOCKET_ERROR) {
         err = WSAGetLastError();
@@ -97,7 +97,7 @@ fail:
 }
 
 error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serversock) {
-    initOnce();
+    initializeOnce();
 
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {

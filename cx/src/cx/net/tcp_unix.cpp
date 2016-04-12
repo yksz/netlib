@@ -16,7 +16,7 @@ namespace cx {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-static void initOnce() {
+static void initializeOnce() {
     static bool s_initialized = false;
     if (s_initialized) {
         return;
@@ -29,7 +29,7 @@ static void initOnce() {
 
 error ConnectWithTCP(const char* host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientsock) {
-    initOnce();
+    initializeOnce();
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
@@ -42,20 +42,19 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(host);
 
-    int err = 0;
-
     ioctl(sockfd, FIONBIO, &kNonBlockingMode);
     if (connect(sockfd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-        if (errno == EINPROGRESS || errno == EALREADY || errno == EINTR) {
-        } else {
-            err = errno;
-            goto fail;
+        if (errno != EINPROGRESS && errno != EALREADY && errno != EINTR) {
+            int err = errno;
+            close(sockfd);
+            return GetOSError(err);
         }
     }
 
     struct timeval prev;
     gettimeofday(&prev, NULL);
 
+    int err = 0;
     while (true) {
         fd_set writefds, exceptfds;
         FD_ZERO(&writefds);
@@ -103,7 +102,7 @@ fail:
 }
 
 error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serversock) {
-    initOnce();
+    initializeOnce();
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
