@@ -75,17 +75,17 @@ error ConnectWithTCP(const char* host, int port, int timeout,
             err = ETIMEDOUT;
             goto fail;
         } else {
-            int soerr;
-            socklen_t optlen = sizeof(soerr);
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &optlen);
-            if (soerr == EINPROGRESS || soerr == EALREADY || soerr == EINTR) {
+            int soErr;
+            socklen_t optlen = sizeof(soErr);
+            getsockopt(fd, SOL_SOCKET, SO_ERROR, &soErr, &optlen);
+            if (soErr == EINPROGRESS || soErr == EALREADY || soErr == EINTR) {
                 continue;
-            } else if (soerr == 0 || soerr == EISCONN) {
+            } else if (soErr == 0 || soErr == EISCONN) {
                 ioctl(fd, FIONBIO, &kBlockingMode);
                 *clientsock = std::make_shared<TCPSocket>(fd, std::string(host));
                 return error::nil;
             } else {
-                err = soerr;
+                err = soErr;
                 goto fail;
             }
         }

@@ -15,25 +15,30 @@ static void cleanup() {
     WSACleanup();
 }
 
-static void initializeOnce() {
+static error initializeOnce() {
     static bool s_initialized = false;
     if (s_initialized) {
-        return;
+        return error::nil;
     }
 
     WSADATA data;
     if (WSAStartup(MAKEWORD(2, 0), &data) != 0) {
         fprintf(stderr, "ERROR: WSAStartup: %d\n", WSAGetLastError());
+        return GetOSError(WSAGetLastError());
     } else {
         atexit(cleanup);
     }
 
     s_initialized = true;
+    return error::nil;
 }
 
 error ConnectWithTCP(const char* host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientsock) {
-    initializeOnce();
+    error initErr = initializeOnce();
+    if (initErr != error::nil) {
+        return initErr;
+    }
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
@@ -77,11 +82,11 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     } else if (!FD_ISSET(fd, &exceptfds)) {
         err = 0;
     } else {
-        int soerr = 0;
-        int optlen = sizeof(soerr);
-        getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soerr, &optlen);
-        if (soerr != 0) {
-            err = soerr;
+        int soErr = 0;
+        int optlen = sizeof(soErr);
+        getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soErr, &optlen);
+        if (soErr != 0) {
+            err = soErr;
             goto fail;
         }
     }
