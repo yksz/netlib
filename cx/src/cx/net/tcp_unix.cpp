@@ -93,6 +93,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
         struct timeval now;
         gettimeofday(&now, NULL);
         timeout -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
+        timeout = (timeout > 0) ? timeout : 0;
         prev = now;
     }
 
