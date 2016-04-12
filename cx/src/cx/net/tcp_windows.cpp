@@ -162,7 +162,7 @@ error WindowsTCPSocket::Read(char* buf, size_t len, int* nbytes) {
     if (*nbytes == 0) {
         return error::eof;
     } else if (*nbytes == SOCKET_ERROR) {
-        return GetOSError(errno);
+        return GetOSError(WSAGetLastError());
     } else {
         return error::nil;
     }
