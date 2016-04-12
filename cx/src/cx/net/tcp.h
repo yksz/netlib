@@ -1,39 +1,75 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 #include "cx/error.h"
 #include "cx/io/stream.h"
+#if defined(_WIN32) || defined(_WIN64)
+ #include <winsock2.h>
+#endif // defined(_WIN32) || defined(_WIN64)
 
 namespace cx {
 
-struct TCPSocket : Closer, Reader, Writer {
-    virtual ~TCPSocket() {};
-    virtual bool IsClosed() = 0;
+#if defined(_WIN32) || defined(_WIN64)
+using SocketFD = SOCKET;
+#else
+using SocketFD = int;
+#endif // defined(_WIN32) || defined(_WIN64)
+
+class TCPSocket final : public Closer, public Reader, public Writer {
+public:
+    TCPSocket(const SocketFD& fd, const std::string& addr)
+            : m_fd(fd), m_remoteAddr(addr), m_closed(false) {};
+    ~TCPSocket();
+    TCPSocket(const TCPSocket&) = delete;
+    TCPSocket& operator=(const TCPSocket&) = delete;
+
+    error Close();
+    bool IsClosed();
+    error Read(char* buf, size_t len, int* nbytes);
+    error Write(const char* buf, size_t len, int* nbytes);
     /**
-     * @param[in] timeout milliseconds
+     * @param[in] timeout Its unit is milliseconds. Not set timeout if 0 is specified.
      */
-    virtual error SetSocketTimeout(int timeout) = 0;
-    virtual std::string GetHost() = 0;
+    error SetSocketTimeout(int timeout);
+    std::string GetRemoteAddress() { return m_remoteAddr; };
+
+private:
+    const SocketFD m_fd;
+    const std::string m_remoteAddr;
+    std::atomic<bool> m_closed;
 };
 
-struct TCPListener : Closer {
-    virtual ~TCPListener() {};
-    virtual bool IsClosed() = 0;
+class TCPListener final : public Closer {
+public:
+    explicit TCPListener(const SocketFD& fd)
+            : m_fd(fd), m_closed(false) {};
+    ~TCPListener();
+    TCPListener(const TCPListener&) = delete;
+    TCPListener& operator=(const TCPListener&) = delete;
+
+    error Close();
+    bool IsClosed();
     /**
      * @param[out] clientsock
      */
-    virtual error Accept(std::shared_ptr<TCPSocket>* clientsock) = 0;
+    error Accept(std::shared_ptr<TCPSocket>* clientsock);
+
+private:
+    const SocketFD m_fd;
+    std::atomic<bool> m_closed;
 };
 
 /**
  * @param[in] host IPv4 only
  * @param[in] port
- * @param[in] timeout milliseconds
+ * @param[in] timeout Its unit is milliseconds.
  * @param[out] clientsock
  */
 error ConnectWithTCP(const char* host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientsock);
+
 /**
  * @param[in] port
  * @param[out] serversock

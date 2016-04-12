@@ -43,7 +43,7 @@ int main(void) {
             printf("%s\n", GetErrorMessage(err));
             continue;
         }
-        printf("%s connected\n", socket->GetHost().c_str());
+        printf("%s connected\n", socket->GetRemoteAddress().c_str());
         std::thread th([=]() {
             handle(socket);
         });
