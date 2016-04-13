@@ -1,7 +1,6 @@
 #include "cx/net/tcp.h"
 #include <cassert>
 #include <cerrno>
-#include <csignal>
 #include <cstring>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -10,26 +9,16 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "cx/net/init.h"
 
 namespace cx {
 
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-static void initializeOnce() {
-    static bool s_initialized = false;
-    if (s_initialized) {
-        return;
-    }
-
-    signal(SIGPIPE, SIG_IGN);
-
-    s_initialized = true;
-}
-
 error ConnectWithTCP(const char* host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
-    initializeOnce();
+    internal::init();
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
@@ -103,7 +92,7 @@ fail:
 }
 
 error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock) {
-    initializeOnce();
+    internal::init();
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {

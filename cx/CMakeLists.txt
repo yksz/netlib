@@ -21,10 +21,12 @@ set(source_files
 )
 if(WIN32)
     set(source_files ${source_files}
+        ${PROJECT_SOURCE_DIR}/src/cx/net/init_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/tcp_windows.cpp
     )
 else()
     set(source_files ${source_files}
+        ${PROJECT_SOURCE_DIR}/src/cx/net/init_unix.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/tcp_unix.cpp
     )
 endif()

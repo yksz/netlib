@@ -1,41 +1,17 @@
 #include "cx/net/tcp.h"
 #include <cassert>
-#include <cstdio>
 #include <cstring>
 #include <winsock2.h>
-
-#pragma comment(lib, "ws2_32.lib")
+#include "cx/net/init.h"
 
 namespace cx {
 
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
-static void cleanup() {
-    WSACleanup();
-}
-
-static error initializeOnce() {
-    static bool s_initialized = false;
-    if (s_initialized) {
-        return error::nil;
-    }
-
-    WSADATA data;
-    if (WSAStartup(MAKEWORD(2, 0), &data) != 0) {
-        fprintf(stderr, "ERROR: WSAStartup: %d\n", WSAGetLastError());
-        return GetOSError(WSAGetLastError());
-    } else {
-        atexit(cleanup);
-    }
-
-    s_initialized = true;
-    return error::nil;
-}
-
 error ConnectWithTCP(const char* host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
-    initializeOnce();
+    internal::init();
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
@@ -99,7 +75,7 @@ fail:
 }
 
 error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock) {
-    initializeOnce();
+    internal::init();
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
