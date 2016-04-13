@@ -73,7 +73,7 @@ error ConnectWithTCP(const std::string& host, unsigned int port, int timeout,
     }
     if (connErr == 0) {
         ioctlsocket(fd, FIONBIO, &kBlockingMode);
-        *clientSock = std::make_shared<TCPSocket>(fd, std::string(host));
+        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
         return error::nil;
     }
 
