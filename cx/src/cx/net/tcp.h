@@ -30,7 +30,7 @@ public:
     error Read(char* buf, size_t len, int* nbytes);
     error Write(const char* buf, size_t len, int* nbytes);
     /**
-     * @param[in] timeout Its unit is milliseconds. Not set timeout if 0 is specified.
+     * @param[in] timeout Set the timeout in milliseconds. Not set timeout if 0 is specified.
      */
     error SetSocketTimeout(int timeout);
     std::string GetRemoteAddress() { return m_remoteAddr; };
@@ -52,9 +52,9 @@ public:
     error Close();
     bool IsClosed();
     /**
-     * @param[out] clientsock
+     * @param[out] clientSock
      */
-    error Accept(std::shared_ptr<TCPSocket>* clientsock);
+    error Accept(std::shared_ptr<TCPSocket>* clientSock);
 
 private:
     const SocketFD m_fd;
@@ -64,16 +64,16 @@ private:
 /**
  * @param[in] host IPv4 only
  * @param[in] port
- * @param[in] timeout Its unit is milliseconds.
- * @param[out] clientsock
+ * @param[in] timeout Set the timeout in milliseconds.
+ * @param[out] clientSock
  */
 error ConnectWithTCP(const char* host, int port, int timeout,
-        std::shared_ptr<TCPSocket>* clientsock);
+        std::shared_ptr<TCPSocket>* clientSock);
 
 /**
  * @param[in] port
- * @param[out] serversock
+ * @param[out] serverSock
  */
-error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serversock);
+error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock);
 
 } // namespace cx
