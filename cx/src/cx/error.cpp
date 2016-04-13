@@ -1,9 +1,11 @@
 #include "cx/error.h"
 
-#include <cerrno>
 #include <map>
 #if defined(_WIN32) || defined(_WIN64)
  #include <winsock2.h>
+#else
+ #include <cerrno>
+ #include <netdb.h>
 #endif // defined(_WIN32) || defined(_WIN64)
 
 namespace cx {
@@ -60,6 +62,10 @@ static const std::map<error, const char*> errorMessages {
     { error::nametoolong,      "File name too long" },
     { error::hostunreach,      "No route to host" },
     { error::proto,            "Protocol error" },
+    { error::host_not_found,   "No such host is known" },
+    { error::try_again,        "A temporary error occurred on an authoritative name server" },
+    { error::no_recovery,      "A nonrecoverable name server error occurred" },
+    { error::no_data,          "The requested name is valid but does not have an IP address" },
 };
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -96,6 +102,9 @@ static const std::map<int, error> osErrors {
     { WSAELOOP,           error::loop },
     { WSAENAMETOOLONG,    error::nametoolong },
     { WSAEHOSTUNREACH,    error::hostunreach },
+    { WSAHOST_NOT_FOUND,  error::host_not_found },
+    { WSATRY_AGAIN,       error::try_again },
+    { WSANO_RECOVERY,     error::no_recovery },
 };
 #else
 static const std::map<int, error> osErrors {
@@ -145,6 +154,10 @@ static const std::map<int, error> osErrors {
     { ENAMETOOLONG,    error::nametoolong },
     { EHOSTUNREACH,    error::hostunreach },
     { EPROTO,          error::proto },
+    { EAI_NONAME,      error::host_not_found },
+    { EAI_AGAIN,       error::try_again },
+    { EAI_FAIL,        error::no_recovery },
+    { EAI_NODATA,      error::no_data },
 };
 #endif // defined(_WIN32) || defined(_WIN64)
 

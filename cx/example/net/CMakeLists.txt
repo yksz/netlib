@@ -4,6 +4,7 @@ if(UNIX) # include Linux
 endif()
 
 project_add_example(
+    lookup_example
     tcp_client_example
     tcp_server_example
 )

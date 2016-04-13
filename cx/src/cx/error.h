@@ -9,7 +9,7 @@ enum struct error {
     illegal_argument,
     illegal_state,
 
-    // OS errors
+    // OS errors (errno)
     perm,
     noent,
     intr,
@@ -56,6 +56,12 @@ enum struct error {
     nametoolong,
     hostunreach,
     proto,
+
+    // OS errors (h_errno)
+    host_not_found,
+    try_again,
+    no_recovery,
+    no_data
 };
 
 const char* GetErrorMessage(const error& err);
