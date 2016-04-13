@@ -10,7 +10,7 @@ namespace cx {
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
-error ConnectWithTCP(const std::string& host, int port, int timeout,
+error ConnectWithTCP(const std::string& host, unsigned int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
     internal::init();
 
@@ -48,6 +48,7 @@ error ConnectWithTCP(const std::string& host, int port, int timeout,
     FD_SET(fd, &exceptfds);
 
     struct timeval connTimeout;
+    timeout = (timeout > 0) ? timeout : 0;
     connTimeout.tv_sec = timeout / 1000;
     connTimeout.tv_usec = timeout % 1000 * 1000;
 
@@ -81,7 +82,7 @@ fail:
     return GetOSError(connErr);
 }
 
-error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock) {
+error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
     internal::init();
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -171,6 +172,8 @@ error TCPSocket::SetSocketTimeout(int timeout) {
         assert(0 && "Already closed");
         return error::illegal_state;
     }
+
+    timeout = (timeout > 0) ? timeout : 0;
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &timeout, sizeof(timeout)) == SOCKET_ERROR) {
         return GetOSError(WSAGetLastError());

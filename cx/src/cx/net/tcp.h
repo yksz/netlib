@@ -30,7 +30,7 @@ public:
     error Read(char* buf, size_t len, int* nbytes);
     error Write(const char* buf, size_t len, int* nbytes);
     /**
-     * @param[in] timeout Set the timeout in milliseconds. Not set timeout if 0 is specified.
+     * @param[in] timeout Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetSocketTimeout(int timeout);
     std::string GetRemoteAddress() { return m_remoteAddr; };
@@ -67,13 +67,13 @@ private:
  * @param[in] timeout Set the timeout in milliseconds.
  * @param[out] clientSock
  */
-error ConnectWithTCP(const std::string& host, int port, int timeout,
+error ConnectWithTCP(const std::string& host, unsigned int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock);
 
 /**
  * @param[in] port
  * @param[out] serverSock
  */
-error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock);
+error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock);
 
 } // namespace cx

@@ -17,7 +17,7 @@ namespace cx {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectWithTCP(const std::string& host, int port, int timeout,
+error ConnectWithTCP(const std::string& host, unsigned int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
     internal::init();
 
@@ -59,6 +59,7 @@ error ConnectWithTCP(const std::string& host, int port, int timeout,
         FD_SET(fd, &exceptfds);
 
         struct timeval connTimeout;
+        timeout = (timeout > 0) ? timeout : 0;
         connTimeout.tv_sec = timeout / 1000;
         connTimeout.tv_usec = timeout % 1000 * 1000;
 
@@ -89,7 +90,6 @@ error ConnectWithTCP(const std::string& host, int port, int timeout,
         struct timeval now;
         gettimeofday(&now, NULL);
         timeout -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
-        timeout = (timeout > 0) ? timeout : 0;
         prev = now;
     }
 
@@ -98,7 +98,7 @@ fail:
     return GetOSError(connErr);
 }
 
-error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock) {
+error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
     internal::init();
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -190,6 +190,7 @@ error TCPSocket::SetSocketTimeout(int timeout) {
     }
 
     struct timeval soTimeout;
+    timeout = (timeout > 0) ? timeout : 0;
     soTimeout.tv_sec = timeout / 1000;
     soTimeout.tv_usec = timeout % 1000 * 1000;
 
