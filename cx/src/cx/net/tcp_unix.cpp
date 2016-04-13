@@ -10,15 +10,22 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "cx/net/init.h"
+#include "cx/net/lookup.h"
 
 namespace cx {
 
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectWithTCP(const char* host, int port, int timeout,
+error ConnectWithTCP(const std::string& host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
     internal::init();
+
+    std::string ipAddr;
+    error luErr = LookupAddress(host, &ipAddr);
+    if (luErr != error::nil) {
+        return luErr;
+    }
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
@@ -29,7 +36,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = inet_addr(host);
+    serverAddr.sin_addr.s_addr = inet_addr(ipAddr.c_str());
 
     ioctl(fd, FIONBIO, &kNonBlockingMode);
     if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
@@ -43,7 +50,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     struct timeval prev;
     gettimeofday(&prev, NULL);
 
-    int err = 0;
+    int connErr = 0;
     while (true) {
         fd_set writefds, exceptfds;
         FD_ZERO(&writefds);
@@ -58,23 +65,23 @@ error ConnectWithTCP(const char* host, int port, int timeout,
         errno = 0;
         int result = select(fd + 1, NULL, &writefds, &exceptfds, &connTimeout);
         if (result == -1) {
-            err = errno;
+            connErr = errno;
             goto fail;
         } else if (result == 0) {
-            err = ETIMEDOUT;
+            connErr = ETIMEDOUT;
             goto fail;
         } else {
-            int soerr;
-            socklen_t optlen = sizeof(soerr);
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &optlen);
-            if (soerr == EINPROGRESS || soerr == EALREADY || soerr == EINTR) {
+            int soErr;
+            socklen_t optlen = sizeof(soErr);
+            getsockopt(fd, SOL_SOCKET, SO_ERROR, &soErr, &optlen);
+            if (soErr == EINPROGRESS || soErr == EALREADY || soErr == EINTR) {
                 continue;
-            } else if (soerr == 0 || soerr == EISCONN) {
+            } else if (soErr == 0 || soErr == EISCONN) {
                 ioctl(fd, FIONBIO, &kBlockingMode);
                 *clientSock = std::make_shared<TCPSocket>(fd, std::string(host));
                 return error::nil;
             } else {
-                err = soerr;
+                connErr = soErr;
                 goto fail;
             }
         }
@@ -88,7 +95,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
 
 fail:
     close(fd);
-    return GetOSError(err);
+    return GetOSError(connErr);
 }
 
 error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock) {

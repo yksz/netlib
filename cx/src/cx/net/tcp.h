@@ -62,12 +62,12 @@ private:
 };
 
 /**
- * @param[in] host IPv4 only
+ * @param[in] host A hostname or IPv4
  * @param[in] port
  * @param[in] timeout Set the timeout in milliseconds.
  * @param[out] clientSock
  */
-error ConnectWithTCP(const char* host, int port, int timeout,
+error ConnectWithTCP(const std::string& host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock);
 
 /**

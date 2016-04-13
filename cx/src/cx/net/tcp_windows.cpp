@@ -3,15 +3,22 @@
 #include <cstring>
 #include <winsock2.h>
 #include "cx/net/init.h"
+#include "cx/net/lookup.h"
 
 namespace cx {
 
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
-error ConnectWithTCP(const char* host, int port, int timeout,
+error ConnectWithTCP(const std::string& host, int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
     internal::init();
+
+    std::string ipAddr;
+    error luErr = LookupAddress(host, &ipAddr);
+    if (luErr != error::nil) {
+        return luErr;
+    }
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
@@ -22,7 +29,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.S_un.S_addr = inet_addr(host);
+    serverAddr.sin_addr.S_un.S_addr = inet_addr(ipAddr.c_str());
 
     ioctlsocket(fd, FIONBIO, &kNonBlockingMode);
     if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
@@ -44,26 +51,26 @@ error ConnectWithTCP(const char* host, int port, int timeout,
     connTimeout.tv_sec = timeout / 1000;
     connTimeout.tv_usec = timeout % 1000 * 1000;
 
-    int err = 0;
+    int connErr = 0;
     int result = select(0, NULL, &writefds, &exceptfds, &connTimeout);
     if (result == SOCKET_ERROR) {
-        err = WSAGetLastError();
+        connErr = WSAGetLastError();
         goto fail;
     } else if (result == 0) {
-        err = WSAETIMEDOUT;
+        connErr = WSAETIMEDOUT;
         goto fail;
     } else if (!FD_ISSET(fd, &exceptfds)) {
-        err = 0;
+        connErr = 0;
     } else {
-        int soerr = 0;
-        int optlen = sizeof(soerr);
-        getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soerr, &optlen);
-        if (soerr != 0) {
-            err = soerr;
+        int soErr = 0;
+        int optlen = sizeof(soErr);
+        getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soErr, &optlen);
+        if (soErr != 0) {
+            connErr = soErr;
             goto fail;
         }
     }
-    if (err == 0) {
+    if (connErr == 0) {
         ioctlsocket(fd, FIONBIO, &kBlockingMode);
         *clientSock = std::make_shared<TCPSocket>(fd, std::string(host));
         return error::nil;
@@ -71,7 +78,7 @@ error ConnectWithTCP(const char* host, int port, int timeout,
 
 fail:
     closesocket(fd);
-    return GetOSError(err);
+    return GetOSError(connErr);
 }
 
 error ListenWithTCP(int port, std::unique_ptr<TCPListener>* serverSock) {

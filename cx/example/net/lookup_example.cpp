@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     char* host = argv[1];
 
     std::string addr;
-    error err = LookupAddress(std::string(host), &addr);
+    error err = LookupAddress(host, &addr);
     if (err != error::nil) {
         printf("%s\n", GetErrorMessage(err));
         return 1;
