@@ -208,13 +208,12 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
     struct sockaddr_in clientAddr;
     int len = sizeof(clientAddr);
 
-    SOCKET sock = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
-    if (sock == INVALID_SOCKET) {
+    SOCKET clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
+    if (clientFD == INVALID_SOCKET) {
         return GetOSError(WSAGetLastError());
     }
 
-    std::string host = inet_ntoa(clientAddr.sin_addr);
-    *clientSock = std::make_shared<TCPSocket>(sock, std::move(host));
+    *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
     return error::nil;
 }
 

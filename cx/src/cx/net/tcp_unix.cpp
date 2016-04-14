@@ -232,8 +232,7 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
         return GetOSError(errno);
     }
 
-    std::string host = inet_ntoa(clientAddr.sin_addr);
-    *clientSock = std::make_shared<TCPSocket>(clientFD, std::move(host));
+    *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
     return error::nil;
 }
 
