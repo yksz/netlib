@@ -20,4 +20,16 @@ struct NetworkInterface {
  */
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs);
 
+/**
+ * @param[in] index
+ * @param[out] inf
+ */
+error GetNetworkInterfaceByIndex(int index, NetworkInterface* inf);
+
+/**
+ * @param[in] name
+ * @param[out] inf
+ */
+error GetNetworkInterfaceByName(const std::string& name, NetworkInterface* inf);
+
 } // namespace cx

@@ -18,6 +18,7 @@ set(source_files
     ${PROJECT_SOURCE_DIR}/src/cx/error.cpp
     ${PROJECT_SOURCE_DIR}/src/cx/io/binary.cpp
     ${PROJECT_SOURCE_DIR}/src/cx/io/stream.cpp
+    ${PROJECT_SOURCE_DIR}/src/cx/net/interface.cpp
     ${PROJECT_SOURCE_DIR}/src/cx/net/lookup.cpp
 )
 if(WIN32)
@@ -26,11 +27,19 @@ if(WIN32)
         ${PROJECT_SOURCE_DIR}/src/cx/net/interface_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/tcp_windows.cpp
     )
-else()
+else() # UNIX
     set(source_files ${source_files}
         ${PROJECT_SOURCE_DIR}/src/cx/net/init_unix.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/tcp_unix.cpp
     )
+    if(APPLE)
+        set(source_files ${source_files}
+        )
+    else() # Linux
+        set(source_files ${source_files}
+            ${PROJECT_SOURCE_DIR}/src/cx/net/interface_linux.cpp
+        )
+    endif()
 endif()
 # shared and static libraries
 add_library(${PROJECT_NAME} SHARED ${source_files})

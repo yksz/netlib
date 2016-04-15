@@ -1,4 +1,5 @@
 #include "cx/net/interface.h"
+#include <codecvt>
 #include <winsock2.h>
 #include <iphlpapi.h>
 
@@ -28,15 +29,14 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     for (auto pAddr = pAddrs; pAddr != NULL; pAddr = pAddr->Next) {
         NetworkInterface inf = {0};
         inf.index = pAddr->IfIndex;
-        inf.name = pAddr->AdapterName;
+        std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+        inf.name = converter.to_bytes(pAddr->FriendlyName);
         for (int i = 0; i < pAddr->PhysicalAddressLength; i++) {
             inf.hardwareAddress[i] = pAddr->PhysicalAddress[i];
         }
         inf.mtu = pAddr->Mtu;
-        switch (pAddr->IfType) {
-            case IF_TYPE_SOFTWARE_LOOPBACK:
-                inf.isLoopback = true;
-                break;
+        if (pAddr->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
+            inf.isLoopback = true;
         }
         infs->push_back(std::move(inf));
     }
