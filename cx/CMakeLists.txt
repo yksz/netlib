@@ -34,6 +34,7 @@ else() # UNIX
     )
     if(APPLE)
         set(source_files ${source_files}
+            ${PROJECT_SOURCE_DIR}/src/cx/net/interface_bsd.cpp
         )
     else() # Linux
         set(source_files ${source_files}
