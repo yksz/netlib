@@ -8,6 +8,7 @@ enum struct error {
     eof,
     illegal_argument,
     illegal_state,
+    not_found,
 
     // OS errors (errno)
     perm,

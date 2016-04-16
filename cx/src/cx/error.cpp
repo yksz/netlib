@@ -16,6 +16,7 @@ static const std::map<error, const char*> errorMessages {
     { error::eof,              "End of file" },
     { error::illegal_argument, "Illegal argument" },
     { error::illegal_state,    "Illegal state" },
+    { error::not_found,        "Not found" },
     { error::perm,             "Operation not permitted" },
     { error::noent,            "No such file or directory" },
     { error::intr,             "Interrupted system call" },
