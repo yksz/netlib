@@ -51,10 +51,18 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         return GetOSError(errno);
     }
 
-    struct ifreq ifr[16]; // max number of interfaces
     struct ifconf ifc;
-    ifc.ifc_len = sizeof(ifr);
-    ifc.ifc_req = ifr;
+
+    // get the buffer size
+    ifc.ifc_buf = NULL;
+    if (ioctl(fd, SIOCGIFCONF, &ifc) == -1) {
+        int err = errno;
+        close(fd);
+        return GetOSError(err);
+    }
+
+    char* buf = new char[ifc.ifc_len];
+    ifc.ifc_buf = buf;
     if (ioctl(fd, SIOCGIFCONF, &ifc) == -1) {
         int err = errno;
         close(fd);
@@ -62,22 +70,23 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     }
 
     error err;
-    int nifs = ifc.ifc_len / sizeof(struct ifreq);
-    for (int i = 0; i < nifs; i++) {
+    struct ifreq* it = ifc.ifc_req;
+    struct ifreq* end = it + (ifc.ifc_len / sizeof(struct ifreq));
+    for (; it != end; it++) {
         NetworkInterface inf = {0};
-        err = getIndex(fd, &ifr[i], &inf.index);
+        err = getIndex(fd, it, &inf.index);
         if (err != error::nil) {
             goto fail;
         }
-        err = getName(fd, &ifr[i], &inf.name);
+        err = getName(fd, it, &inf.name);
         if (err != error::nil) {
             goto fail;
         }
-        err = getHardwareAddress(fd, &ifr[i], &inf.hardwareAddress);
+        err = getHardwareAddress(fd, it, &inf.hardwareAddress);
         if (err != error::nil) {
             goto fail;
         }
-        err = getFlags(fd, &ifr[i], &inf.isUp, &inf.isLoopback);
+        err = getFlags(fd, it, &inf.isUp, &inf.isLoopback);
         if (err != error::nil) {
             goto fail;
         }
@@ -85,6 +94,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     }
 
 fail:
+    delete[] buf;
     close(fd);
     return err;
 }
