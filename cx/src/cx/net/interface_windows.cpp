@@ -34,7 +34,9 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         for (int i = 0; i < pAddr->PhysicalAddressLength; i++) {
             inf.hardwareAddress[i] = pAddr->PhysicalAddress[i];
         }
-        inf.mtu = pAddr->Mtu;
+        if (pAddr->OperStatus == IfOperStatusUp) {
+            inf.isUp = true;
+        }
         if (pAddr->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
             inf.isLoopback = true;
         }

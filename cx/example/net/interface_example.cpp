@@ -17,7 +17,7 @@ static void printNetworkInterface(const NetworkInterface& inf) {
     printf("Index          : %d\n", inf.index);
     printf("Name           : %s\n", inf.name.c_str());
     printf("HardwareAddress: %s\n", formatMACAddr(inf.hardwareAddress, ':').c_str());
-    printf("MTU            : %d\n", inf.mtu);
+    printf("Up             : %s\n", inf.isUp ? "true" : "false");
     printf("Loopback       : %s\n", inf.isLoopback ? "true" : "false");
 }
 

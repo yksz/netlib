@@ -36,18 +36,11 @@ static error getHardwareAddress(int fd, struct ifreq* ifr,
     return error::nil;
 }
 
-static error getMTU(int fd, struct ifreq* ifr, int* mtu) {
-    if (ioctl(fd, SIOCGIFMTU, ifr) == -1) {
-        return GetOSError(errno);
-    }
-    *mtu = ifr->ifr_mtu;
-    return error::nil;
-}
-
-static error getIsLoopback(int fd, struct ifreq* ifr, bool* isLoopback) {
+static error getFlags(int fd, struct ifreq* ifr, bool* isUp, bool* isLoopback) {
     if (ioctl(fd, SIOCGIFFLAGS, ifr) == -1) {
         return GetOSError(errno);
     }
+    *isUp = ifr->ifr_flags & IFF_UP;
     *isLoopback = ifr->ifr_flags & IFF_LOOPBACK;
     return error::nil;
 }
@@ -84,11 +77,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         if (err != error::nil) {
             goto fail;
         }
-        err = getMTU(fd, &ifr[i], &inf.mtu);
-        if (err != error::nil) {
-            goto fail;
-        }
-        err = getIsLoopback(fd, &ifr[i], &inf.isLoopback);
+        err = getFlags(fd, &ifr[i], &inf.isUp, &inf.isLoopback);
         if (err != error::nil) {
             goto fail;
         }

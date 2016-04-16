@@ -11,7 +11,7 @@ struct NetworkInterface {
     int index;
     std::string name;
     std::array<unsigned char, 6> hardwareAddress;
-    int mtu;
+    bool isUp;
     bool isLoopback;
 };
 

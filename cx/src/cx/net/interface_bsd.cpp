@@ -33,7 +33,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
                 inf.isLoopback = true;
                 break;
         }
-//        inf.isUp = ifa->ifa_flags & IFF_UP;
+        inf.isUp = ifa->ifa_flags & IFF_UP;
         infs->push_back(inf);
     }
     freeifaddrs(ifaddrs);
