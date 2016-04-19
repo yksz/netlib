@@ -90,8 +90,8 @@ error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock)
         return GetOSError(WSAGetLastError());
     }
 
-    BOOL soval = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*) &soval, sizeof(soval)) == SOCKET_ERROR) {
+    BOOL enabled = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*) &enabled, sizeof(enabled)) == SOCKET_ERROR) {
         goto fail;
     }
 
@@ -145,10 +145,11 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
     }
 
     *nbytes = recv(m_fd, buf, len, 0);
+    if (*nbytes == SOCKET_ERROR) {
+        return GetOSError(WSAGetLastError());
+    }
     if (*nbytes == 0) {
         return error::eof;
-    } else if (*nbytes == SOCKET_ERROR) {
-        return GetOSError(WSAGetLastError());
     } else {
         return error::nil;
     }

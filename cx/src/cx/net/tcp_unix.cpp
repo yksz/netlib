@@ -106,8 +106,8 @@ error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock)
         return GetOSError(errno);
     }
 
-    int soval = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &soval, sizeof(soval)) == -1) {
+    int enabled = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) == -1) {
         goto fail;
     }
 
@@ -161,10 +161,11 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
     }
 
     *nbytes = recv(m_fd, buf, len, 0);
+    if (*nbytes == -1) {
+        return GetOSError(errno);
+    }
     if (*nbytes == 0) {
         return error::eof;
-    } else if (*nbytes == -1) {
-        return GetOSError(errno);
     } else {
         return error::nil;
     }
