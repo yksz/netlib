@@ -26,11 +26,13 @@ if(WIN32)
         ${PROJECT_SOURCE_DIR}/src/cx/net/init_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/interface_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/tcp_windows.cpp
+        ${PROJECT_SOURCE_DIR}/src/cx/net/udp_windows.cpp
     )
 else() # UNIX
     set(source_files ${source_files}
         ${PROJECT_SOURCE_DIR}/src/cx/net/init_unix.cpp
         ${PROJECT_SOURCE_DIR}/src/cx/net/tcp_unix.cpp
+        ${PROJECT_SOURCE_DIR}/src/cx/net/udp_unix.cpp
     )
     if(APPLE)
         set(source_files ${source_files}

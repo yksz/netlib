@@ -8,4 +8,6 @@ project_add_example(
     lookup_example
     tcp_client_example
     tcp_server_example
+    udp_client_example
+    udp_server_example
 )
