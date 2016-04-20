@@ -10,5 +10,5 @@ cd %DIRNAME%
 
 cmake -G "Visual Studio 12" ^
     -Dbuild_examples=ON ^
-    ../cx
+    ../netlib
 pause

@@ -14,7 +14,7 @@ cmake -G "Eclipse CDT4 - MinGW Makefiles" ^
     -DCMAKE_BUILD_TYPE=Debug ^
     -DCMAKE_CXX_COMPILER_ARG1=-std=c++11 ^
     -Dbuild_examples=ON ^
-    ../cx
+    ../netlib
 pause
 
 rem On Eclipse: Import > General > Existing Projects into Workspace
