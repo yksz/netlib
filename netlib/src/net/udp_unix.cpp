@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "net/init.h"
+#include "net/internal/init.h"
 #include "net/lookup.h"
 
 namespace net {

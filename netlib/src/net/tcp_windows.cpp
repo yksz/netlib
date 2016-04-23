@@ -2,7 +2,7 @@
 #include <cassert>
 #include <cstring>
 #include <winsock2.h>
-#include "net/init.h"
+#include "net/internal/init.h"
 #include "net/lookup.h"
 
 namespace net {

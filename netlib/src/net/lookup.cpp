@@ -9,7 +9,7 @@
  #include <sys/socket.h>
  #include <sys/types.h>
 #endif // defined(_WIN32) || defined(_WIN64)
-#include "net/init.h"
+#include "net/internal/init.h"
 
 namespace net {
 

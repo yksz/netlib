@@ -23,14 +23,14 @@ set(source_files
 )
 if(WIN32)
     set(source_files ${source_files}
-        ${PROJECT_SOURCE_DIR}/src/net/init_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/net/interface_windows.cpp
+        ${PROJECT_SOURCE_DIR}/src/net/internal/init_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/net/tcp_windows.cpp
         ${PROJECT_SOURCE_DIR}/src/net/udp_windows.cpp
     )
 else() # UNIX
     set(source_files ${source_files}
-        ${PROJECT_SOURCE_DIR}/src/net/init_unix.cpp
+        ${PROJECT_SOURCE_DIR}/src/net/internal/init_unix.cpp
         ${PROJECT_SOURCE_DIR}/src/net/tcp_unix.cpp
         ${PROJECT_SOURCE_DIR}/src/net/udp_unix.cpp
     )

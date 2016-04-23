@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "net/init.h"
+#include "net/internal/init.h"
 #include "net/lookup.h"
 
 namespace net {
