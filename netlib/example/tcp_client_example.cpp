@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<TCPSocket> socket;
     error err = ConnectTCP(host, port, 5000, &socket);
     if (err != error::nil) {
-        printf("%s\n", GetErrorMessage(err));
+        printf("%s\n", ErrorMessage(err));
         return 1;
     }
     socket->SetSocketTimeout(10000);

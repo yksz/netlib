@@ -23,7 +23,7 @@ error LookupAddress(const std::string& host, std::string* addr) {
 
     int err = getaddrinfo(host.c_str(), NULL, &hints, &result);
     if (err != 0) {
-        return GetOSError(err);
+        return toError(err);
     }
     *addr = inet_ntoa(((struct sockaddr_in*) (result->ai_addr))->sin_addr);
     freeaddrinfo(result);

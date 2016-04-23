@@ -29,7 +29,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
 
     struct sockaddr_in serverAddr;
@@ -43,7 +43,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
         if (errno != EINPROGRESS && errno != EALREADY && errno != EINTR) {
             int err = errno;
             close(fd);
-            return GetOSError(err);
+            return toError(err);
         }
     }
 
@@ -95,7 +95,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
 
 fail:
     close(fd);
-    return GetOSError(connErr);
+    return toError(connErr);
 }
 
 error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
@@ -103,7 +103,7 @@ error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
 
     int enabled = 1;
@@ -131,7 +131,7 @@ error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
 fail:
     int err = errno;
     close(fd);
-    return GetOSError(err);
+    return toError(err);
 }
 
 TCPSocket::~TCPSocket() {
@@ -144,7 +144,7 @@ error TCPSocket::Close() {
     }
 
     if (close(m_fd) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     m_closed = true;
     return error::nil;
@@ -162,7 +162,7 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     *nbytes = recv(m_fd, buf, len, 0);
     if (*nbytes == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     if (*nbytes == 0) {
         return error::eof;
@@ -179,7 +179,7 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
 
     *nbytes = send(m_fd, buf, len, 0);
     if (*nbytes == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     return error::nil;
 }
@@ -196,10 +196,10 @@ error TCPSocket::SetSocketTimeout(int timeout) {
     soTimeout.tv_usec = timeout % 1000 * 1000;
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     return error::nil;
 }
@@ -214,7 +214,7 @@ error TCPListener::Close() {
     }
 
     if (close(m_fd) == -1) {
-        GetOSError(errno);
+        toError(errno);
     }
     m_closed = true;
     return error::nil;
@@ -230,7 +230,7 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
 
     int clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
     if (clientFD == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
 
     *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));

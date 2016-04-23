@@ -65,7 +65,8 @@ enum struct error {
     no_data
 };
 
-const char* GetErrorMessage(const error& err);
-error GetOSError(const int& osErrno);
+const char* ErrorMessage(const error& err);
+
+error toError(const int& osErrno);
 
 } // namespace net

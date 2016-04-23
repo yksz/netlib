@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
     std::string addr;
     error err = LookupAddress(host, &addr);
     if (err != error::nil) {
-        printf("%s\n", GetErrorMessage(err));
+        printf("%s\n", ErrorMessage(err));
         return 1;
     }
     printf("%s\n", addr.c_str());

@@ -10,7 +10,7 @@ namespace net {
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     struct ifaddrs* ifaddrs;
     if (getifaddrs(&ifaddrs) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     for (auto ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr->sa_family != AF_LINK) {

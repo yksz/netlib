@@ -9,7 +9,7 @@ namespace net {
 
 static error getIndex(int fd, struct ifreq* ifr, int* index) {
     if (ioctl(fd, SIOCGIFINDEX, ifr) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     *index = ifr->ifr_ifindex;
     return error::nil;
@@ -18,7 +18,7 @@ static error getIndex(int fd, struct ifreq* ifr, int* index) {
 static error getName(int fd, struct ifreq* ifr, std::string* name) {
 #ifdef SIOCGIFNAME
     if (ioctl(fd, SIOCGIFNAME, ifr) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     *name = ifr->ifr_name;
 #endif
@@ -28,7 +28,7 @@ static error getName(int fd, struct ifreq* ifr, std::string* name) {
 static error getHardwareAddress(int fd, struct ifreq* ifr,
         std::array<unsigned char, 6>* hardwareAddress) {
     if (ioctl(fd, SIOCGIFHWADDR, ifr) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     for (size_t i = 0; i < hardwareAddress->size(); i++) {
         (*hardwareAddress)[i] = ifr->ifr_hwaddr.sa_data[i];
@@ -38,7 +38,7 @@ static error getHardwareAddress(int fd, struct ifreq* ifr,
 
 static error getFlags(int fd, struct ifreq* ifr, bool* isUp, bool* isLoopback) {
     if (ioctl(fd, SIOCGIFFLAGS, ifr) == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     *isUp = ifr->ifr_flags & IFF_UP;
     *isLoopback = ifr->ifr_flags & IFF_LOOPBACK;
@@ -48,7 +48,7 @@ static error getFlags(int fd, struct ifreq* ifr, bool* isUp, bool* isLoopback) {
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
 
     struct ifconf ifc;
@@ -58,7 +58,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     if (ioctl(fd, SIOCGIFCONF, &ifc) == -1) {
         int err = errno;
         close(fd);
-        return GetOSError(err);
+        return toError(err);
     }
 
     char* buf = new char[ifc.ifc_len];
@@ -66,7 +66,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     if (ioctl(fd, SIOCGIFCONF, &ifc) == -1) {
         int err = errno;
         close(fd);
-        return GetOSError(err);
+        return toError(err);
     }
 
     error err;

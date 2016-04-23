@@ -162,12 +162,12 @@ static const std::map<int, error> osErrors {
 };
 #endif // defined(_WIN32) || defined(_WIN64)
 
-const char* GetErrorMessage(const error& err) {
+const char* ErrorMessage(const error& err) {
     auto it = errorMessages.find(err);
     return it != errorMessages.end() ? it->second : "";
 }
 
-error GetOSError(const int& osErrno) {
+error toError(const int& osErrno) {
     if (osErrno == 0) {
         return error::nil;
     }

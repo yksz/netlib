@@ -19,7 +19,7 @@ error ConnectUDP(const std::string& host, unsigned int port,
 
     SocketFD fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
 
     *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
@@ -31,7 +31,7 @@ error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
 
     SocketFD fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
 
     struct sockaddr_in serverAddr = {0};
@@ -42,7 +42,7 @@ error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
         int err = errno;
         closesocket(fd);
-        return GetOSError(err);
+        return toError(err);
     }
 
     *serverSock = std::make_shared<UDPSocket>(fd);
@@ -58,8 +58,8 @@ error UDPSocket::Close() {
         return error::nil;
     }
 
-	if (closesocket(m_fd) == -1) {
-        return GetOSError(errno);
+    if (closesocket(m_fd) == -1) {
+        return toError(errno);
     }
     m_closed = true;
     return error::nil;
@@ -77,7 +77,7 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     *nbytes = recv(m_fd, buf, len, 0);
     if (*nbytes == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     if (*nbytes == 0) {
         return error::eof;
@@ -97,7 +97,7 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
     int fromlen = sizeof(from);
     *nbytes = recvfrom(m_fd, buf, len, 0, (struct sockaddr*) &from, &fromlen);
     if (*nbytes == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     *addr = inet_ntoa(from.sin_addr);
     *port = ntohs(from.sin_port);
@@ -133,7 +133,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_port = htons(port);
     *nbytes = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
     if (*nbytes == -1) {
-        return GetOSError(errno);
+        return toError(errno);
     }
     return error::nil;
 }
@@ -147,10 +147,10 @@ error UDPSocket::SetSocketTimeout(int timeout) {
     timeout = (timeout > 0) ? timeout : 0;
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &timeout, sizeof(timeout)) == SOCKET_ERROR) {
-        return GetOSError(WSAGetLastError());
+        return toError(WSAGetLastError());
     }
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (const char*) &timeout, sizeof(timeout)) == SOCKET_ERROR) {
-        return GetOSError(WSAGetLastError());
+        return toError(WSAGetLastError());
     }
     return error::nil;
 }
