@@ -13,6 +13,7 @@ cmake -G "Eclipse CDT4 - Unix Makefiles" \
     -DCMAKE_ECLIPSE_VERSION=4.4 \
     -DCMAKE_BUILD_TYPE=Debug \
     -DCMAKE_CXX_COMPILER_ARG1=-std=c++11 \
+    -Dbuild_tests=ON \
     -Dbuild_examples=ON \
     ../netlib
 
