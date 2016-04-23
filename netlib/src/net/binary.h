@@ -43,7 +43,7 @@ private:
     int m_offset;
     const bool m_shouldConvertEndian;
 
-    void checkOutOfRange(size_t size);
+    bool isOutOfRange(size_t size);
 };
 
 } // namespace net
