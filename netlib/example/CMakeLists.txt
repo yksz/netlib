@@ -6,7 +6,7 @@ endif()
 project_add_example(
     binary_example
     interface_example
-    lookup_example
+    resolver_example
     tcp_client_example
     tcp_server_example
     udp_client_example

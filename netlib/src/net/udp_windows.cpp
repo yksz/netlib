@@ -3,7 +3,7 @@
 #include <cerrno>
 #include <winsock2.h>
 #include "net/internal/init.h"
-#include "net/lookup.h"
+#include "net/resolver.h"
 
 namespace net {
 

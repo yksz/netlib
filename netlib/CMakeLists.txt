@@ -17,9 +17,9 @@ include_directories(
 set(source_files
     ${PROJECT_SOURCE_DIR}/src/net/error.cpp
     ${PROJECT_SOURCE_DIR}/src/net/binary.cpp
-    ${PROJECT_SOURCE_DIR}/src/net/stream.cpp
     ${PROJECT_SOURCE_DIR}/src/net/interface.cpp
-    ${PROJECT_SOURCE_DIR}/src/net/lookup.cpp
+    ${PROJECT_SOURCE_DIR}/src/net/resolver.cpp
+    ${PROJECT_SOURCE_DIR}/src/net/stream.cpp
 )
 if(WIN32)
     set(source_files ${source_files}

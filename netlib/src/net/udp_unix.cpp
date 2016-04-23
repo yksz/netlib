@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "net/internal/init.h"
-#include "net/lookup.h"
+#include "net/resolver.h"
 
 namespace net {
 

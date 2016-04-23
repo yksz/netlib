@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-#include "net/lookup.h"
+#include "net/resolver.h"
 
 using namespace net;
 
