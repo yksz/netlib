@@ -3,7 +3,7 @@
 
 namespace net {
 
-error Reader::ReadFully(char* buf, size_t len) {
+error Reader::ReadFull(char* buf, size_t len) {
     if (buf == nullptr) {
         assert(0 && "buf must not be nullptr");
         return error::illegal_argument;
@@ -47,7 +47,7 @@ error Reader::ReadLine(char* buf, size_t len) {
     }
 }
 
-error Writer::WriteFully(const char* buf, size_t len) {
+error Writer::WriteFull(const char* buf, size_t len) {
     if (buf == nullptr) {
         assert(0 && "buf must not be nullptr");
         return error::illegal_argument;

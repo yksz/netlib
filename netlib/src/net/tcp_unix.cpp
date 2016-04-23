@@ -17,7 +17,7 @@ namespace net {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectWithTCP(const std::string& host, unsigned int port, int timeout,
+error ConnectTCP(const std::string& host, unsigned int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock) {
     internal::init();
 
@@ -98,7 +98,7 @@ fail:
     return GetOSError(connErr);
 }
 
-error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
+error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
     internal::init();
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);

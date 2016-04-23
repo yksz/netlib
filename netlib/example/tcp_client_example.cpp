@@ -20,15 +20,15 @@ int main(int argc, char** argv) {
     char* msg = argv[3];
 
     std::shared_ptr<TCPSocket> socket;
-    error err = ConnectWithTCP(host, port, 5000, &socket);
+    error err = ConnectTCP(host, port, 5000, &socket);
     if (err != error::nil) {
         printf("%s\n", GetErrorMessage(err));
         return 1;
     }
     socket->SetSocketTimeout(10000);
     for (int i = 0; i < kSendCount; i++) {
-        socket->WriteFully(msg, strlen(msg));
-        socket->WriteFully("\n", 1);
+        socket->WriteFull(msg, strlen(msg));
+        socket->WriteFull("\n", 1);
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     socket->Close();

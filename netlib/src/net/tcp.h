@@ -67,13 +67,13 @@ private:
  * @param[in] timeout Set the timeout in milliseconds.
  * @param[out] clientSock
  */
-error ConnectWithTCP(const std::string& host, unsigned int port, int timeout,
+error ConnectTCP(const std::string& host, unsigned int port, int timeout,
         std::shared_ptr<TCPSocket>* clientSock);
 
 /**
  * @param[in] port
  * @param[out] serverSock
  */
-error ListenWithTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock);
+error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock);
 
 } // namespace net

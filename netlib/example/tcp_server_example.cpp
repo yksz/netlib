@@ -30,7 +30,7 @@ int main(void) {
     setvbuf(stdout, NULL, _IONBF, 0);
 
     std::unique_ptr<TCPListener> listener;
-    error err = ListenWithTCP(kPort, &listener);
+    error err = ListenTCP(kPort, &listener);
     if (err != error::nil) {
         printf("%s\n", GetErrorMessage(err));
         return 1;

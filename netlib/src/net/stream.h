@@ -18,7 +18,7 @@ struct Reader {
      * @param[out] nbytes
      */
     virtual error Read(char* buf, size_t len, int* nbytes) = 0;
-    error ReadFully(char* buf, size_t len);
+    error ReadFull(char* buf, size_t len);
     error ReadLine(char* buf, size_t len);
 };
 
@@ -30,7 +30,7 @@ struct Writer {
      * @param[out] nbytes
      */
     virtual error Write(const char* buf, size_t len, int* nbytes) = 0;
-    error WriteFully(const char* buf, size_t len);
+    error WriteFull(const char* buf, size_t len);
 };
 
 } // namespace net
