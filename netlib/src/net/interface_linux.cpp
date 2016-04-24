@@ -46,6 +46,11 @@ static error getFlags(int fd, struct ifreq* ifr, bool* isUp, bool* isLoopback) {
 }
 
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
+    if (infs == nullptr) {
+        assert(0 && "infs must not be nullptr");
+        return error::illegal_argument;
+    }
+
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
         return toError(errno);

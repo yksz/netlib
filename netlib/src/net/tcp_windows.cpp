@@ -10,8 +10,12 @@ namespace net {
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
-error ConnectTCP(const std::string& host, unsigned int port, int timeout,
-        std::shared_ptr<TCPSocket>* clientSock) {
+error ConnectTCP(const std::string& host, unsigned int port, int timeout, std::shared_ptr<TCPSocket>* clientSock) {
+    if (clientSock == nullptr) {
+        assert(0 && "clientSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     std::string ipAddr;
@@ -83,6 +87,11 @@ fail:
 }
 
 error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
+    if (serverSock == nullptr) {
+        assert(0 && "serverSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -144,15 +153,17 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
         return error::illegal_state;
     }
 
-    *nbytes = recv(m_fd, buf, len, 0);
-    if (*nbytes == SOCKET_ERROR) {
+    int size = recv(m_fd, buf, len, 0);
+    if (size == SOCKET_ERROR) {
         return toError(WSAGetLastError());
     }
-    if (*nbytes == 0) {
+    if (size == 0) {
         return error::eof;
-    } else {
-        return error::nil;
     }
+    if (nbytes != nullptr) {
+        *nbytes = size;
+    }
+    return error::nil;
 }
 
 error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
@@ -161,9 +172,12 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
         return error::illegal_state;
     }
 
-    *nbytes = send(m_fd, buf, len, 0);
-    if (*nbytes == SOCKET_ERROR) {
+    int size = send(m_fd, buf, len, 0);
+    if (size == SOCKET_ERROR) {
         return toError(WSAGetLastError());
+    }
+    if (nbytes != nullptr) {
+        *nbytes = size;
     }
     return error::nil;
 }
@@ -206,6 +220,11 @@ bool TCPListener::IsClosed() {
 }
 
 error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
+    if (clientSock == nullptr) {
+        assert(0 && "clientSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     struct sockaddr_in clientAddr;
     int len = sizeof(clientAddr);
 

@@ -9,8 +9,12 @@
 
 namespace net {
 
-error ConnectUDP(const std::string& host, unsigned int port,
-        std::shared_ptr<UDPSocket>* clientSock) {
+error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDPSocket>* clientSock) {
+    if (clientSock == nullptr) {
+        assert(0 && "clientSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     std::string ipAddr;
@@ -24,11 +28,18 @@ error ConnectUDP(const std::string& host, unsigned int port,
         return toError(errno);
     }
 
-    *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
+    if (clientSock != nullptr) {
+        *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
+    }
     return error::nil;
 }
 
 error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
+    if (serverSock == nullptr) {
+        assert(0 && "serverSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -77,15 +88,17 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
         return error::illegal_state;
     }
 
-    *nbytes = recv(m_fd, buf, len, 0);
-    if (*nbytes == -1) {
+    int size = recv(m_fd, buf, len, 0);
+    if (size == -1) {
         return toError(errno);
     }
-    if (*nbytes == 0) {
+    if (size == 0) {
         return error::eof;
-    } else {
-        return error::nil;
     }
+    if (nbytes != nullptr) {
+        *nbytes = size;
+    }
+    return error::nil;
 }
 
 error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
@@ -97,17 +110,19 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
 
     struct sockaddr_in from = {0};
     socklen_t fromlen = sizeof(from);
-    *nbytes = recvfrom(m_fd, buf, len, 0, (struct sockaddr *) &from, &fromlen);
-    if (*nbytes == -1) {
+    int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr *) &from, &fromlen);
+    if (size == -1) {
         return toError(errno);
     }
     *addr = inet_ntoa(from.sin_addr);
     *port = ntohs(from.sin_port);
-    if (*nbytes == 0) {
+    if (size == 0) {
         return error::eof;
-    } else {
-        return error::nil;
     }
+    if (nbytes != nullptr) {
+        *nbytes = size;
+    }
+    return error::nil;
 }
 
 error UDPSocket::Write(const char* buf, size_t len, int* nbytes) {
@@ -133,9 +148,12 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_family = AF_INET;
     to.sin_addr.s_addr = inet_addr(addr.c_str());
     to.sin_port = htons(port);
-    *nbytes = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
-    if (*nbytes == -1) {
+    int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
+    if (size == -1) {
         return toError(errno);
+    }
+    if (nbytes != nullptr) {
+        *nbytes = size;
     }
     return error::nil;
 }

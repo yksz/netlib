@@ -1,4 +1,5 @@
 #include "net/resolver.h"
+#include <cassert>
 #if defined(_WIN32) || defined(_WIN64)
  #include <winsock2.h>
  #include <ws2tcpip.h>
@@ -14,6 +15,11 @@
 namespace net {
 
 error LookupAddress(const std::string& host, std::string* addr) {
+    if (addr == nullptr) {
+        assert(0 && "addr must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     struct addrinfo hints = {0};

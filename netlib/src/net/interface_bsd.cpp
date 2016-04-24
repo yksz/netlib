@@ -1,4 +1,5 @@
 #include "net/interface.h"
+#include <cassert>
 #include <cerrno>
 #include <ifaddrs.h>
 #include <net/if.h>
@@ -8,6 +9,11 @@
 namespace net {
 
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
+    if (infs == nullptr) {
+        assert(0 && "infs must not be nullptr");
+        return error::illegal_argument;
+    }
+
     struct ifaddrs* ifaddrs;
     if (getifaddrs(&ifaddrs) == -1) {
         return toError(errno);

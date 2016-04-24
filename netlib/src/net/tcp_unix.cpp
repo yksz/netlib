@@ -17,8 +17,12 @@ namespace net {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectTCP(const std::string& host, unsigned int port, int timeout,
-        std::shared_ptr<TCPSocket>* clientSock) {
+error ConnectTCP(const std::string& host, unsigned int port, int timeout, std::shared_ptr<TCPSocket>* clientSock) {
+    if (clientSock == nullptr) {
+        assert(0 && "clientSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     std::string ipAddr;
@@ -99,6 +103,11 @@ fail:
 }
 
 error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
+    if (serverSock == nullptr) {
+        assert(0 && "serverSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     internal::init();
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -160,15 +169,17 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
         return error::illegal_state;
     }
 
-    *nbytes = recv(m_fd, buf, len, 0);
-    if (*nbytes == -1) {
+    int size = recv(m_fd, buf, len, 0);
+    if (size == -1) {
         return toError(errno);
     }
-    if (*nbytes == 0) {
+    if (size == 0) {
         return error::eof;
-    } else {
-        return error::nil;
     }
+    if (nbytes != nullptr) {
+        *nbytes = size;
+    }
+    return error::nil;
 }
 
 error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
@@ -177,9 +188,12 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
         return error::illegal_state;
     }
 
-    *nbytes = send(m_fd, buf, len, 0);
-    if (*nbytes == -1) {
+    int size = send(m_fd, buf, len, 0);
+    if (size == -1) {
         return toError(errno);
+    }
+    if (nbytes != nullptr) {
+        *nbytes = size;
     }
     return error::nil;
 }
@@ -225,6 +239,11 @@ bool TCPListener::IsClosed() {
 }
 
 error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
+    if (clientSock == nullptr) {
+        assert(0 && "clientSock must not be nullptr");
+        return error::illegal_argument;
+    }
+
     struct sockaddr_in clientAddr;
     socklen_t len = sizeof(clientAddr);
 

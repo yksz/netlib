@@ -8,6 +8,11 @@
 namespace net {
 
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
+    if (infs == nullptr) {
+        assert(0 && "infs must not be nullptr");
+        return error::illegal_argument;
+    }
+
     ULONG bufSize = 15000;
     PIP_ADAPTER_ADDRESSES pAddrs = nullptr;
     do {

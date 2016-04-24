@@ -1,8 +1,14 @@
 #include "net/interface.h"
+#include <cassert>
 
 namespace net {
 
 error GetNetworkInterfaceByIndex(int index, NetworkInterface* inf) {
+    if (inf == nullptr) {
+        assert(0 && "inf must not be nullptr");
+        return error::illegal_argument;
+    }
+
     std::vector<NetworkInterface> infs;
     error err = GetNetworkInterfaces(&infs);
     if (err != error::nil) {
@@ -18,6 +24,11 @@ error GetNetworkInterfaceByIndex(int index, NetworkInterface* inf) {
 }
 
 error GetNetworkInterfaceByName(const std::string& name, NetworkInterface* inf) {
+    if (inf == nullptr) {
+        assert(0 && "inf must not be nullptr");
+        return error::illegal_argument;
+    }
+
     std::vector<NetworkInterface> infs;
     error err = GetNetworkInterfaces(&infs);
     if (err != error::nil) {

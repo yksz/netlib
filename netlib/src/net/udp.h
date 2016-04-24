@@ -52,8 +52,7 @@ private:
  * @param[in] port
  * @param[out] clientSock
  */
-error ConnectUDP(const std::string& host, unsigned int port,
-        std::shared_ptr<UDPSocket>* clientSock);
+error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDPSocket>* clientSock);
 
 /**
  * @param[in] port
