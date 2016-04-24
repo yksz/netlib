@@ -53,7 +53,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
     connTimeout.tv_usec = timeout % 1000 * 1000;
 
     int connErr = 0;
-    int result = select(0, NULL, &writefds, &exceptfds, &connTimeout);
+    int result = select(0, nullptr, &writefds, &exceptfds, &connTimeout);
     if (result == SOCKET_ERROR) {
         connErr = WSAGetLastError();
         goto fail;

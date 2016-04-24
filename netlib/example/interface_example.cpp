@@ -22,12 +22,12 @@ static void printNetworkInterface(const NetworkInterface& inf) {
 }
 
 int main(int argc, char** argv) {
-    char* name = NULL;
+    char* name = nullptr;
     if (argc > 1) {
         name = argv[1];
     }
 
-    if (name != NULL) {
+    if (name != nullptr) {
         NetworkInterface inf;
         if (GetNetworkInterfaceByName(name, &inf) == error::nil) {
             printNetworkInterface(inf);

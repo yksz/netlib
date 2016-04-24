@@ -54,7 +54,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     struct ifconf ifc;
 
     // get the buffer size
-    ifc.ifc_buf = NULL;
+    ifc.ifc_buf = nullptr;
     if (ioctl(fd, SIOCGIFCONF, &ifc) == -1) {
         int err = errno;
         close(fd);

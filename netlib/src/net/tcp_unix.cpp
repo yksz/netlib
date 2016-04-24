@@ -48,7 +48,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
     }
 
     struct timeval prev;
-    gettimeofday(&prev, NULL);
+    gettimeofday(&prev, nullptr);
 
     int connErr = 0;
     while (true) {
@@ -64,7 +64,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
         connTimeout.tv_usec = timeout % 1000 * 1000;
 
         errno = 0;
-        int result = select(fd + 1, NULL, &writefds, &exceptfds, &connTimeout);
+        int result = select(fd + 1, nullptr, &writefds, &exceptfds, &connTimeout);
         if (result == -1) {
             connErr = errno;
             goto fail;
@@ -88,7 +88,7 @@ error ConnectTCP(const std::string& host, unsigned int port, int timeout,
         }
 
         struct timeval now;
-        gettimeofday(&now, NULL);
+        gettimeofday(&now, nullptr);
         timeout -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
         prev = now;
     }

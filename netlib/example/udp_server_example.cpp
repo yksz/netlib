@@ -7,7 +7,7 @@ using namespace net;
 static const int kPort = 8080;
 
 int main(void) {
-    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stdout, nullptr, _IONBF, 0);
 
     std::shared_ptr<UDPSocket> socket;
     error err = ListenUDP(kPort, &socket);

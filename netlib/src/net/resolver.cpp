@@ -21,7 +21,7 @@ error LookupAddress(const std::string& host, std::string* addr) {
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_INET;
 
-    int err = getaddrinfo(host.c_str(), NULL, &hints, &result);
+    int err = getaddrinfo(host.c_str(), nullptr, &hints, &result);
     if (err != 0) {
         return toError(err);
     }

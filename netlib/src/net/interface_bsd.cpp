@@ -12,7 +12,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     if (getifaddrs(&ifaddrs) == -1) {
         return toError(errno);
     }
-    for (auto ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
+    for (auto ifa = ifaddrs; ifa != nullptr; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr->sa_family != AF_LINK) {
             continue;
         }

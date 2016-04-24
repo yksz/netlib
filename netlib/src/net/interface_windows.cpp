@@ -9,24 +9,24 @@ namespace net {
 
 error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     ULONG bufSize = 15000;
-    PIP_ADAPTER_ADDRESSES pAddrs = NULL;
+    PIP_ADAPTER_ADDRESSES pAddrs = nullptr;
     do {
         pAddrs = (IP_ADAPTER_ADDRESSES*) malloc(bufSize);
-        if (pAddrs == NULL) {
+        if (pAddrs == nullptr) {
             return error::nomem;
         }
-        auto result = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL, pAddrs, &bufSize);
+        auto result = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, nullptr, pAddrs, &bufSize);
         if (result == NO_ERROR) {
             break;
         }
         free(pAddrs);
-        pAddrs = NULL;
+        pAddrs = nullptr;
         if (result != ERROR_BUFFER_OVERFLOW) {
             return error::io;
         }
     } while (true);
 
-    for (auto pAddr = pAddrs; pAddr != NULL; pAddr = pAddr->Next) {
+    for (auto pAddr = pAddrs; pAddr != nullptr; pAddr = pAddr->Next) {
         NetworkInterface inf = {0};
         inf.index = pAddr->IfIndex;
         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
