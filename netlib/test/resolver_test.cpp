@@ -18,3 +18,7 @@ TEST(LookupAddress, Localhost) {
         EXPECT_EQ("127.0.0.1", addr);
     }
 }
+
+TEST(LookupAddress, Nullptr) {
+    ASSERT_DEATH({ LookupAddress("localhost", nullptr); }, "");
+}
