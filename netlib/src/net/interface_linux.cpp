@@ -1,4 +1,5 @@
 #include "net/interface.h"
+#include <cassert>
 #include <cerrno>
 #include <net/if.h>
 #include <sys/ioctl.h>
