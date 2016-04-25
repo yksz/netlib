@@ -8,7 +8,7 @@ int main(void) {
     char buf[32];
 
     // write
-    ByteConverter w(buf, sizeof(buf), ByteOrder_BIG_ENDIAN);
+    ByteConverter w(buf, sizeof(buf), ByteOrder::BigEndian);
     const char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutUint8(1);
@@ -19,8 +19,8 @@ int main(void) {
     w.PutDouble(6.0);
 
     // read
-    ByteConverter r(buf, sizeof(buf), ByteOrder_BIG_ENDIAN);
-    char str2[5] = {};
+    ByteConverter r(buf, sizeof(buf), ByteOrder::BigEndian);
+    char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     printf("%s\n", str2);
     printf("%d\n", r.GetUint8());

@@ -8,7 +8,7 @@ TEST(ByteConverter, PutAndGet) {
     char buf[32];
 
     // write
-    ByteConverter w(buf, sizeof(buf), ByteOrder_BIG_ENDIAN);
+    ByteConverter w(buf, sizeof(buf), ByteOrder::BigEndian);
     const char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutUint8(1);
@@ -19,8 +19,8 @@ TEST(ByteConverter, PutAndGet) {
     w.PutDouble(6.0);
 
     // read
-    ByteConverter r(buf, sizeof(buf), ByteOrder_BIG_ENDIAN);
-    char str2[5] = {};
+    ByteConverter r(buf, sizeof(buf), ByteOrder::BigEndian);
+    char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     EXPECT_EQ(std::string(str1), std::string(str2));
     EXPECT_EQ(1, r.GetUint8());

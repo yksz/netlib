@@ -17,7 +17,7 @@ static bool isLittleEndian() {
 }
 
 ByteOrder NativeOrder() {
-    return isLittleEndian() ? ByteOrder_LITTLE_ENDIAN : ByteOrder_BIG_ENDIAN;
+    return isLittleEndian() ? ByteOrder::LittleEndian : ByteOrder::BigEndian;
 }
 
 ByteConverter::ByteConverter(char* buf, size_t len, ByteOrder order)

@@ -5,9 +5,9 @@
 
 namespace net {
 
-enum ByteOrder {
-    ByteOrder_BIG_ENDIAN,
-    ByteOrder_LITTLE_ENDIAN
+enum struct ByteOrder {
+    BigEndian,
+    LittleEndian,
 };
 
 ByteOrder NativeOrder();
