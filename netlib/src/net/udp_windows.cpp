@@ -21,8 +21,8 @@ error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDP
         return err;
     }
 
-    SocketFD fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd == -1) {
+    SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == INVALID_SOCKET) {
         return toError(errno);
     }
 
@@ -38,8 +38,8 @@ error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
 
     internal::init();
 
-    SocketFD fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd == -1) {
+    SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == INVALID_SOCKET) {
         return toError(errno);
     }
 

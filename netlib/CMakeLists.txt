@@ -53,7 +53,9 @@ if(UNIX)
 endif()
 if(MINGW)
     target_link_libraries(${PROJECT_NAME} ws2_32)
+    target_link_libraries(${PROJECT_NAME} iphlpapi)
     target_link_libraries(${PROJECT_NAME}_static ws2_32)
+    target_link_libraries(${PROJECT_NAME}_static iphlpapi)
 endif()
 
 ### Install

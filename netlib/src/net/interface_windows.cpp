@@ -1,4 +1,6 @@
 #include "net/interface.h"
+#include <cassert>
+#include <cstddef>
 #include <codecvt>
 #include <winsock2.h>
 #include <iphlpapi.h>
@@ -36,7 +38,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         inf.index = pAddr->IfIndex;
         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
         inf.name = converter.to_bytes(pAddr->FriendlyName);
-        for (int i = 0; i < pAddr->PhysicalAddressLength; i++) {
+        for (size_t i = 0; i < pAddr->PhysicalAddressLength; i++) {
             inf.hardwareAddress[i] = pAddr->PhysicalAddress[i];
         }
         if (pAddr->OperStatus == IfOperStatusUp) {
@@ -47,7 +49,9 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         }
         infs->push_back(std::move(inf));
     }
+
     free(pAddrs);
+    return error::nil;
 }
 
 } // namespace net
