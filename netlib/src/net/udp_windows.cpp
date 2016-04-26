@@ -1,6 +1,5 @@
 #include "net/udp.h"
 #include <cassert>
-#include <cerrno>
 #include <winsock2.h>
 #include "net/internal/init.h"
 #include "net/resolver.h"
@@ -23,7 +22,7 @@ error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDP
 
     SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == INVALID_SOCKET) {
-        return toError(errno);
+        return toError(WSAGetLastError());
     }
 
     *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
@@ -40,7 +39,7 @@ error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
 
     SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == INVALID_SOCKET) {
-        return toError(errno);
+        return toError(WSAGetLastError());
     }
 
     struct sockaddr_in serverAddr = {0};
@@ -49,7 +48,7 @@ error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
     serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-        int err = errno;
+        int err = WSAGetLastError();
         closesocket(fd);
         return toError(err);
     }
@@ -68,7 +67,7 @@ error UDPSocket::Close() {
     }
 
     if (closesocket(m_fd) == -1) {
-        return toError(errno);
+        return toError(WSAGetLastError());
     }
     m_closed = true;
     return error::nil;
@@ -86,7 +85,7 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     int size = recv(m_fd, buf, len, 0);
     if (size == -1) {
-        return toError(errno);
+        return toError(WSAGetLastError());
     }
     if (size == 0) {
         return error::eof;
@@ -108,7 +107,7 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
     int fromlen = sizeof(from);
     int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr*) &from, &fromlen);
     if (size == -1) {
-        return toError(errno);
+        return toError(WSAGetLastError());
     }
     *addr = inet_ntoa(from.sin_addr);
     *port = ntohs(from.sin_port);
@@ -146,7 +145,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_port = htons(port);
     int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
     if (size == -1) {
-        return toError(errno);
+        return toError(WSAGetLastError());
     }
     if (nbytes != nullptr) {
         *nbytes = size;
