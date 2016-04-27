@@ -29,7 +29,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         switch (sdl->sdl_type) {
             case IFT_ETHER:
             {
-                unsigned char* macAddr = (unsigned char*) LLADDR(sdl);
+                uint8_t* macAddr = (uint8_t*) LLADDR(sdl);
                 for (int i = 0; i < inf.hardwareAddress.size(); i++) {
                     inf.hardwareAddress[i] = macAddr[i];
                 }

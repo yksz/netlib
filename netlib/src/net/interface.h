@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <array>
 #include <string>
 #include <vector>
@@ -10,7 +11,7 @@ namespace net {
 struct NetworkInterface {
     int index;
     std::string name;
-    std::array<unsigned char, 6> hardwareAddress;
+    std::array<uint8_t, 6> hardwareAddress;
     bool isUp;
     bool isLoopback;
 };

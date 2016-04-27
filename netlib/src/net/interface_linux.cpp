@@ -27,7 +27,7 @@ static error getName(int fd, struct ifreq* ifr, std::string* name) {
 }
 
 static error getHardwareAddress(int fd, struct ifreq* ifr,
-        std::array<unsigned char, 6>* hardwareAddress) {
+        std::array<uint8_t, 6>* hardwareAddress) {
     if (ioctl(fd, SIOCGIFHWADDR, ifr) == -1) {
         return toError(errno);
     }
