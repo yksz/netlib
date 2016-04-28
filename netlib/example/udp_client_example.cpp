@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < kSendCount; i++) {
         int nbytes;
         socket->Write(msg, strlen(msg), &nbytes);
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     socket->Close();
 }

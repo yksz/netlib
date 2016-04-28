@@ -17,7 +17,7 @@ namespace net {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectTCP(const std::string& host, unsigned int port, int timeout, std::shared_ptr<TCPSocket>* clientSock) {
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout, std::shared_ptr<TCPSocket>* clientSock) {
     if (clientSock == nullptr) {
         assert(0 && "clientSock must not be nullptr");
         return error::illegal_argument;
@@ -102,7 +102,7 @@ fail:
     return toError(connErr);
 }
 
-error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock) {
+error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock) {
     if (serverSock == nullptr) {
         assert(0 && "serverSock must not be nullptr");
         return error::illegal_argument;
@@ -198,7 +198,7 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
     return error::nil;
 }
 
-error TCPSocket::SetSocketTimeout(int timeout) {
+error TCPSocket::SetSocketTimeout(int64_t timeout) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;

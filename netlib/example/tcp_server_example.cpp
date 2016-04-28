@@ -6,7 +6,7 @@
 
 using namespace net;
 
-static const int kPort = 8080;
+static const uint16_t kPort = 8080;
 
 static void handle(const std::shared_ptr<TCPSocket>& clientsock) {
     std::cout << "ThreadID = " << std::this_thread::get_id() << std::endl;

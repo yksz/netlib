@@ -4,7 +4,7 @@
 
 using namespace net;
 
-static const int kPort = 8080;
+static const uint16_t kPort = 8080;
 
 int main(void) {
     setvbuf(stdout, nullptr, _IONBF, 0);
@@ -20,7 +20,7 @@ int main(void) {
         char buf[256] = {0};
         int nbytes;
         std::string addr;
-        unsigned int port;
+        uint16_t port;
         socket->ReadFrom(buf, sizeof(buf), &nbytes, &addr, &port);
         printf("%s:%d: %s\n", addr.c_str(), port, buf);
     }

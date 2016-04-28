@@ -6,7 +6,7 @@
 
 namespace net {
 
-error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDPSocket>* clientSock) {
+error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSocket>* clientSock) {
     if (clientSock == nullptr) {
         assert(0 && "clientSock must not be nullptr");
         return error::illegal_argument;
@@ -29,7 +29,7 @@ error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDP
     return error::nil;
 }
 
-error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock) {
+error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
     if (serverSock == nullptr) {
         assert(0 && "serverSock must not be nullptr");
         return error::illegal_argument;
@@ -97,7 +97,7 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
 }
 
 error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
-            std::string* addr, unsigned int* port) {
+            std::string* addr, uint16_t* port) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
@@ -133,7 +133,7 @@ error UDPSocket::Write(const char* buf, size_t len, int* nbytes) {
 }
 
 error UDPSocket::WriteTo(const char* buf, size_t len,
-        const std::string& addr, unsigned int port, int* nbytes) {
+        const std::string& addr, uint16_t port, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
@@ -153,7 +153,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     return error::nil;
 }
 
-error UDPSocket::SetSocketTimeout(int timeout) {
+error UDPSocket::SetSocketTimeout(int64_t timeout) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;

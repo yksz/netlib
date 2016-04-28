@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <atomic>
 #include <memory>
 #include <string>
@@ -32,7 +33,7 @@ public:
     /**
      * @param[in] timeout Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetSocketTimeout(int timeout);
+    error SetSocketTimeout(int64_t timeout);
     std::string GetRemoteAddress() { return m_remoteAddr; };
 
 private:
@@ -67,12 +68,12 @@ private:
  * @param[in] timeout Set the timeout in milliseconds.
  * @param[out] clientSock
  */
-error ConnectTCP(const std::string& host, unsigned int port, int timeout, std::shared_ptr<TCPSocket>* clientSock);
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout, std::shared_ptr<TCPSocket>* clientSock);
 
 /**
  * @param[in] port
  * @param[out] serverSock
  */
-error ListenTCP(unsigned int port, std::unique_ptr<TCPListener>* serverSock);
+error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock);
 
 } // namespace net

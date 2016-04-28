@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <atomic>
 #include <memory>
 #include <string>
@@ -21,7 +22,7 @@ class UDPSocket final : public Closer, public Reader, public Writer {
 public:
     UDPSocket(const SocketFD& fd)
             : m_fd(fd), m_remoteAddr(""), m_remotePort(0), m_closed(false) {};
-    UDPSocket(const SocketFD& fd, const std::string& addr, unsigned int port)
+    UDPSocket(const SocketFD& fd, const std::string& addr, uint16_t port)
             : m_fd(fd), m_remoteAddr(addr), m_remotePort(port), m_closed(false) {};
     ~UDPSocket();
     UDPSocket(const UDPSocket&) = delete;
@@ -31,19 +32,19 @@ public:
     bool IsClosed();
     error Read(char* buf, size_t len, int* nbytes);
     error ReadFrom(char* buf, size_t len, int* nbytes,
-            std::string* addr, unsigned int* port);
+            std::string* addr, uint16_t* port);
     error Write(const char* buf, size_t len, int* nbytes);
     error WriteTo(const char* buf, size_t len,
-           const std::string& addr, unsigned int port, int* nbytes);
+           const std::string& addr, uint16_t port, int* nbytes);
     /**
      * @param[in] timeout Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetSocketTimeout(int timeout);
+    error SetSocketTimeout(int64_t timeout);
 
 private:
     const SocketFD m_fd;
     const std::string m_remoteAddr;
-    const unsigned int m_remotePort;
+    const uint16_t m_remotePort;
     std::atomic<bool> m_closed;
 };
 
@@ -52,12 +53,12 @@ private:
  * @param[in] port
  * @param[out] clientSock
  */
-error ConnectUDP(const std::string& host, unsigned int port, std::shared_ptr<UDPSocket>* clientSock);
+error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSocket>* clientSock);
 
 /**
  * @param[in] port
  * @param[out] serverSock
  */
-error ListenUDP(unsigned int port, std::shared_ptr<UDPSocket>* serverSock);
+error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock);
 
 } // namespace net
