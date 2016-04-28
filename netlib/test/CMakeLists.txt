@@ -1,6 +1,7 @@
 set(tests
     binary_test
     resolver_test
+    tcp_test
 )
 if(UNIX AND APPLE)
     set(tests ${tests}
