@@ -2,6 +2,7 @@ set(tests
     binary_test
     resolver_test
     tcp_test
+    udp_test
 )
 if(UNIX AND APPLE)
     set(tests ${tests}
