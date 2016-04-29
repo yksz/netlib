@@ -30,7 +30,7 @@ TEST(UDP, ListenAndConnect) {
         char buf[256] = {0};
         err = socket->ReadFull(buf, sizeof(message));
         EXPECT_EQ(error::nil, err);
-        EXPECT_EQ(std::string(message), std::string(buf));
+        EXPECT_STREQ(message, buf);
     });
     {
         std::unique_lock<std::mutex> lock(mutex);
