@@ -66,6 +66,59 @@ void ByteConverter::Get(unsigned char* dst, size_t len) {
     m_offset += len;
 }
 
+int8_t ByteConverter::GetInt8() {
+    size_t size = sizeof(int8_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return 0;
+    }
+    int8_t* p = reinterpret_cast<int8_t*>(&m_buf[m_offset]);
+    m_offset += size;
+    return *p;
+}
+
+int16_t ByteConverter::GetInt16() {
+    size_t size = sizeof(int16_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return 0;
+    }
+    int16_t* p = reinterpret_cast<int16_t*>(&m_buf[m_offset]);
+    if (m_shouldConvertEndian) {
+        *p = byteSwap16(*p);
+    }
+    m_offset += size;
+    return *p;
+}
+
+int32_t ByteConverter::GetInt32() {
+    size_t size = sizeof(int32_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return 0;
+    }
+    int32_t* p = reinterpret_cast<int32_t*>(&m_buf[m_offset]);
+    if (m_shouldConvertEndian) {
+        *p = byteSwap32(*p);
+    }
+    m_offset += size;
+    return *p;
+}
+
+int64_t ByteConverter::GetInt64() {
+    size_t size = sizeof(int64_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return 0;
+    }
+    int64_t* p = reinterpret_cast<int64_t*>(&m_buf[m_offset]);
+    if (m_shouldConvertEndian) {
+        *p = byteSwap64(*p);
+    }
+    m_offset += size;
+    return *p;
+}
+
 uint8_t ByteConverter::GetUint8() {
     size_t size = sizeof(uint8_t);
     if (isOutOfRange(size)) {
@@ -165,6 +218,59 @@ void ByteConverter::Put(const unsigned char* dst, size_t len) {
     }
     memcpy(&m_buf[m_offset], dst, len);
     m_offset += len;
+}
+
+void ByteConverter::PutInt8(int8_t value) {
+    size_t size = sizeof(int8_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return;
+    }
+    char* p = reinterpret_cast<char*>(&value);
+    memcpy(&m_buf[m_offset], p, size);
+    m_offset += size;
+}
+
+void ByteConverter::PutInt16(int16_t value) {
+    size_t size = sizeof(int16_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return;
+    }
+    if (m_shouldConvertEndian) {
+        value = byteSwap16(value);
+    }
+    char* p = reinterpret_cast<char*>(&value);
+    memcpy(&m_buf[m_offset], p, size);
+    m_offset += size;
+}
+
+void ByteConverter::PutInt32(int32_t value) {
+    size_t size = sizeof(int32_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return;
+    }
+    if (m_shouldConvertEndian) {
+        value = byteSwap32(value);
+    }
+    char* p = reinterpret_cast<char*>(&value);
+    memcpy(&m_buf[m_offset], p, size);
+    m_offset += size;
+}
+
+void ByteConverter::PutInt64(int64_t value) {
+    size_t size = sizeof(int64_t);
+    if (isOutOfRange(size)) {
+        assert(0 && "Buffer overflow");
+        return;
+    }
+    if (m_shouldConvertEndian) {
+        value = byteSwap64(value);
+    }
+    char* p = reinterpret_cast<char*>(&value);
+    memcpy(&m_buf[m_offset], p, size);
+    m_offset += size;
 }
 
 void ByteConverter::PutUint8(uint8_t value) {
