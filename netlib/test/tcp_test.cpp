@@ -36,6 +36,7 @@ TEST(TCP, ListenAndConnect) {
         EXPECT_EQ(error::nil, err);
         EXPECT_STREQ(message, buf);
     });
+    // wait until the UDP server starts to running
     {
         std::unique_lock<std::mutex> lock(mutex);
         condition.wait(lock);
@@ -52,5 +53,6 @@ TEST(TCP, ListenAndConnect) {
     err = socket->WriteFull(message, sizeof(message));
     EXPECT_EQ(error::nil, err);
 
+    // cleanup:
     th.join();
 }
