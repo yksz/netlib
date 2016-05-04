@@ -17,7 +17,8 @@ namespace net {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout, std::shared_ptr<TCPSocket>* clientSock) {
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
+        std::shared_ptr<TCPSocket>* clientSock) {
     if (clientSock == nullptr) {
         assert(0 && "clientSock must not be nullptr");
         return error::illegal_argument;

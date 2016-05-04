@@ -68,7 +68,8 @@ private:
  * @param[in] timeout Set the timeout in milliseconds.
  * @param[out] clientSock
  */
-error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout, std::shared_ptr<TCPSocket>* clientSock);
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
+        std::shared_ptr<TCPSocket>* clientSock);
 
 /**
  * @param[in] port
