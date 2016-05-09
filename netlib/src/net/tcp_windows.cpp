@@ -36,6 +36,16 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = inet_addr(ipAddr.c_str());
 
+    if (timeout <= 0) { // connect in blocking mode
+        if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+            int err = WSAGetLastError();
+            closesocket(fd);
+            return toError(err);
+        }
+        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
+        return error::nil;
+    }
+
     ioctlsocket(fd, FIONBIO, &kNonBlockingMode);
     if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         int err = WSAGetLastError();
