@@ -1,23 +1,27 @@
-#include <cstdio>
 #include <cstdlib>
+#include <iostream>
 #include <string>
 #include "net/resolver.h"
 
 using namespace net;
 
 int main(int argc, char** argv) {
-    if (argc <= 1) {
-        printf("usage: %s <host>\n", argv[0]);
-        exit(1);
+    std::string host = "localhost";
+    if (argc > 1) {
+        host = argv[1];
     }
-    char* host = argv[1];
 
     std::string addr;
-    error err = LookupAddress(host, &addr);
+    error err;
+    if (host == "localhost") {
+        err = LookupLocalHostAddress(&addr);
+    } else {
+        err = LookupAddress(host, &addr);
+    }
     if (err != error::nil) {
-        printf("%s\n", ErrorMessage(err));
+        std::cout << host << ": " << ErrorMessage(err) << std::endl;
         return 1;
     }
-    printf("%s\n", addr.c_str());
+    std::cout << host << ": " << addr << std::endl;
     return 0;
 }

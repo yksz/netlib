@@ -11,4 +11,14 @@ namespace net {
  */
 error LookupAddress(const std::string& host, std::string* addr);
 
+/**
+ * @param[out] host
+ */
+error LookupLocalHostName(std::string* host);
+
+/**
+ * @param[out] addr
+ */
+error LookupLocalHostAddress(std::string* addr);
+
 } // namespace net
