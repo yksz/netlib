@@ -50,4 +50,5 @@ int main(void) {
         th.detach();
     }
     listener->Close();
+    return 0;
 }

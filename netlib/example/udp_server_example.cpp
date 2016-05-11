@@ -25,4 +25,5 @@ int main(void) {
         printf("%s:%d: %s\n", addr.c_str(), port, buf);
     }
     socket->Close();
+    return 0;
 }
