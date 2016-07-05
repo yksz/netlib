@@ -141,7 +141,7 @@ error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock) {
         goto fail;
     }
 
-    if (listen(fd, SOMAXCONN)) {
+    if (listen(fd, SOMAXCONN) == -1) {
         goto fail;
     } else {
         *serverSock = std::unique_ptr<TCPListener>(new TCPListener(fd));
