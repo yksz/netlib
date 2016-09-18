@@ -59,7 +59,7 @@ if(MINGW)
 endif()
 
 ### Install
-install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 # install header files
 file(GLOB header_files ${PROJECT_SOURCE_DIR}/src/net/*.h)
 install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/include/net)
@@ -72,6 +72,8 @@ install(FILES ${internal_header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/inclu
 ### Test
 if(build_tests)
     enable_testing()
+    set(BUILD_GTEST ON)
+    set(BUILD_GMOCK OFF)
     add_subdirectory(vendor/googletest)
     add_subdirectory(test)
 endif()
