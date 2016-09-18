@@ -4,11 +4,11 @@
 
 using namespace net;
 
-TEST(ByteConverter, PutAndGetSigned) {
+TEST(ByteBuffer, PutAndGetSigned) {
     char buf[32];
 
     // write
-    ByteConverter w(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
     const char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutInt8(-1);
@@ -19,7 +19,7 @@ TEST(ByteConverter, PutAndGetSigned) {
     w.PutDouble(-6.0);
 
     // read
-    ByteConverter r(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
     char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     EXPECT_STREQ(str1, str2);
@@ -31,11 +31,11 @@ TEST(ByteConverter, PutAndGetSigned) {
     EXPECT_EQ(-6.0, r.GetDouble());
 }
 
-TEST(ByteConverter, PutAndGetUnsigned) {
+TEST(ByteBuffer, PutAndGetUnsigned) {
     char buf[32];
 
     // write
-    ByteConverter w(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
     const unsigned char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutUint8(1);
@@ -46,7 +46,7 @@ TEST(ByteConverter, PutAndGetUnsigned) {
     w.PutDouble(6.0);
 
     // read
-    ByteConverter r(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
     unsigned char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     for (int i = 0; i < sizeof(str1); i++) {

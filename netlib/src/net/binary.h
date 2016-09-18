@@ -12,12 +12,12 @@ enum struct ByteOrder {
 
 ByteOrder NativeOrder();
 
-class ByteConverter final {
+class ByteBuffer final {
 public:
-    ByteConverter(char* buf, size_t len, ByteOrder order);
-    ~ByteConverter() = default;
-    ByteConverter(const ByteConverter&) = delete;
-    void operator=(const ByteConverter&) = delete;
+    ByteBuffer(char* buf, size_t len, ByteOrder order);
+    ~ByteBuffer() = default;
+    ByteBuffer(const ByteBuffer&) = delete;
+    void operator=(const ByteBuffer&) = delete;
 
     void     Get(char* dst, size_t len);
     void     Get(unsigned char* dst, size_t len);
