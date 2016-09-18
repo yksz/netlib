@@ -9,11 +9,11 @@ macro(project_add_googletest)
     cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     include_directories(
-        ${PROJECT_SOURCE_DIR}/include
-        /usr/local/include # googletest
+        ${PROJECT_SOURCE_DIR}/vendor/googletest/googletest/include
+#        /usr/local/include # if googletest is installed
     )
     link_directories(
-        /usr/local/lib # googletest
+#        /usr/local/lib # if googletest is installed
     )
     set(test_libraries ${arg_DEPENDS}
         gtest
@@ -38,7 +38,6 @@ macro(project_add_example)
     cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     include_directories(
-        ${PROJECT_SOURCE_DIR}/include
     )
     set(example_libraries ${arg_DEPENDS}
         ${PROJECT_NAME}_static

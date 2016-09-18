@@ -63,6 +63,7 @@ endif()
 ### Test
 if(build_tests)
     enable_testing()
+    add_subdirectory(vendor/googletest)
     add_subdirectory(test)
 endif()
 

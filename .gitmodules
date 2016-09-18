@@ -1,0 +1,3 @@
+[submodule "netlib/vendor/googletest"]
+	path = netlib/vendor/googletest
+	url = https://github.com/google/googletest.git
