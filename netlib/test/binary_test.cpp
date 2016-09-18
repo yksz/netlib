@@ -59,3 +59,35 @@ TEST(ByteBuffer, PutAndGetUnsigned) {
     EXPECT_EQ(5.0f, r.GetFloat());
     EXPECT_EQ(6.0, r.GetDouble());
 }
+
+TEST(ByteBuffer, GetInt32_BigEndian) {
+    char buf[] = {0x00, 0x00, 0x00, 0x01};
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
+    EXPECT_EQ(1, r.GetInt32());
+}
+
+TEST(ByteBuffer, GetInt32_LittleEndian) {
+    char buf[] = {0x01, 0x00, 0x00, 0x00};
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::LittleEndian);
+    EXPECT_EQ(1, r.GetInt32());
+}
+
+TEST(ByteBuffer, PutInt32_BigEndian) {
+    char buf[4] = {0};
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
+    w.PutInt32(1);
+    EXPECT_EQ(0x00, buf[0]);
+    EXPECT_EQ(0x00, buf[1]);
+    EXPECT_EQ(0x00, buf[2]);
+    EXPECT_EQ(0x01, buf[3]);
+}
+
+TEST(ByteBuffer, PutInt32_LittleEndian) {
+    char buf[4] = {0};
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::LittleEndian);
+    w.PutInt32(1);
+    EXPECT_EQ(0x01, buf[0]);
+    EXPECT_EQ(0x00, buf[1]);
+    EXPECT_EQ(0x00, buf[2]);
+    EXPECT_EQ(0x00, buf[3]);
+}
