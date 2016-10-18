@@ -21,6 +21,7 @@ public:
 
     void     Get(char* dst, size_t len);
     void     Get(unsigned char* dst, size_t len);
+    bool     GetBool();
     int8_t   GetInt8();
     int16_t  GetInt16();
     int32_t  GetInt32();
@@ -34,6 +35,7 @@ public:
 
     void Put(const char* dst, size_t len);
     void Put(const unsigned char* dst, size_t len);
+    void PutBool(bool value);
     void PutInt8(int8_t value);
     void PutInt16(int16_t value);
     void PutInt32(int32_t value);

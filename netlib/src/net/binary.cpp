@@ -66,6 +66,11 @@ void ByteBuffer::Get(unsigned char* dst, size_t len) {
     m_offset += len;
 }
 
+bool ByteBuffer::GetBool() {
+    int8_t i = GetInt8();
+    return i ? true : false;
+}
+
 int8_t ByteBuffer::GetInt8() {
     size_t size = sizeof(int8_t);
     if (isOutOfRange(size)) {
@@ -218,6 +223,11 @@ void ByteBuffer::Put(const unsigned char* dst, size_t len) {
     }
     memcpy(&m_buf[m_offset], dst, len);
     m_offset += len;
+}
+
+void ByteBuffer::PutBool(bool value) {
+    int8_t i = value ? 1 : 0;
+    PutInt8(i);
 }
 
 void ByteBuffer::PutInt8(int8_t value) {

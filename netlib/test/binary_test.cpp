@@ -5,12 +5,13 @@
 using namespace net;
 
 TEST(ByteBuffer, PutAndGetSigned) {
-    char buf[32];
+    char buf[33];
 
     // write
     ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
     const char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
+    w.PutBool(true);
     w.PutInt8(-1);
     w.PutInt16(-2);
     w.PutInt32(-3);
@@ -23,6 +24,7 @@ TEST(ByteBuffer, PutAndGetSigned) {
     char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     EXPECT_STREQ(str1, str2);
+    EXPECT_TRUE(r.GetBool());
     EXPECT_EQ(-1, r.GetInt8());
     EXPECT_EQ(-2, r.GetInt16());
     EXPECT_EQ(-3, r.GetInt32());
@@ -32,12 +34,13 @@ TEST(ByteBuffer, PutAndGetSigned) {
 }
 
 TEST(ByteBuffer, PutAndGetUnsigned) {
-    char buf[32];
+    char buf[33];
 
     // write
     ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
     const unsigned char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
+    w.PutBool(false);
     w.PutUint8(1);
     w.PutUint16(2);
     w.PutUint32(3);
@@ -49,9 +52,10 @@ TEST(ByteBuffer, PutAndGetUnsigned) {
     ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
     unsigned char str2[5] = {0};
     r.Get(str2, sizeof(str2));
-    for (int i = 0; i < sizeof(str1); i++) {
+    for (size_t i = 0; i < sizeof(str1); i++) {
         EXPECT_EQ(str1[i], str2[i]);
     }
+    EXPECT_FALSE(r.GetBool());
     EXPECT_EQ(1, r.GetUint8());
     EXPECT_EQ(2, r.GetUint16());
     EXPECT_EQ(3, r.GetUint32());
