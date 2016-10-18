@@ -239,7 +239,7 @@ error TCPListener::Close() {
     }
 
     if (close(m_fd) == -1) {
-        toError(errno);
+        return toError(errno);
     }
     m_closed = true;
     return error::nil;
