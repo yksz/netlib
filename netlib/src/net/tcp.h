@@ -34,7 +34,7 @@ public:
      * @param[in] timeout Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetSocketTimeout(int64_t timeout);
-    std::string GetRemoteAddress() { return m_remoteAddr; };
+    std::string RemoteAddress() { return m_remoteAddr; };
 
 private:
     const SocketFD m_fd;

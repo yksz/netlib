@@ -8,12 +8,12 @@ using namespace net;
 
 static const uint16_t kPort = 8080;
 
-static void handle(const std::shared_ptr<TCPSocket>& clientsock) {
+static void handle(const std::shared_ptr<TCPSocket>& clientSock) {
     std::cout << "ThreadID = " << std::this_thread::get_id() << std::endl;
 
     char buf[8];
     while (true) {
-        error err = clientsock->ReadLine(buf, sizeof(buf));
+        error err = clientSock->ReadLine(buf, sizeof(buf));
         if (err == error::eof) {
             break;
         }
@@ -23,7 +23,7 @@ static void handle(const std::shared_ptr<TCPSocket>& clientsock) {
         }
         printf("%s", buf);
     }
-    clientsock->Close();
+    clientSock->Close();
 }
 
 int main(void) {
@@ -43,7 +43,7 @@ int main(void) {
             printf("%s\n", ErrorMessage(err));
             continue;
         }
-        printf("%s connected\n", socket->GetRemoteAddress().c_str());
+        printf("%s connected\n", socket->RemoteAddress().c_str());
         std::thread th([=]() {
             handle(socket);
         });
