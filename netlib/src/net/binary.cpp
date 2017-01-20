@@ -89,11 +89,12 @@ int16_t ByteBuffer::GetInt16() {
         return 0;
     }
     int16_t* p = reinterpret_cast<int16_t*>(&m_buf[m_offset]);
+    int16_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap16(*p);
+        copy = byteSwap16(copy);
     }
     m_offset += size;
-    return *p;
+    return copy;
 }
 
 int32_t ByteBuffer::GetInt32() {
@@ -103,11 +104,12 @@ int32_t ByteBuffer::GetInt32() {
         return 0;
     }
     int32_t* p = reinterpret_cast<int32_t*>(&m_buf[m_offset]);
+    int32_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap32(*p);
+        copy = byteSwap32(copy);
     }
     m_offset += size;
-    return *p;
+    return copy;
 }
 
 int64_t ByteBuffer::GetInt64() {
@@ -117,11 +119,12 @@ int64_t ByteBuffer::GetInt64() {
         return 0;
     }
     int64_t* p = reinterpret_cast<int64_t*>(&m_buf[m_offset]);
+    int64_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap64(*p);
+        copy = byteSwap64(copy);
     }
     m_offset += size;
-    return *p;
+    return copy;
 }
 
 uint8_t ByteBuffer::GetUint8() {
@@ -142,11 +145,12 @@ uint16_t ByteBuffer::GetUint16() {
         return 0;
     }
     uint16_t* p = reinterpret_cast<uint16_t*>(&m_buf[m_offset]);
+    uint16_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap16(*p);
+        copy = byteSwap16(copy);
     }
     m_offset += size;
-    return *p;
+    return copy;
 }
 
 uint32_t ByteBuffer::GetUint32() {
@@ -156,11 +160,12 @@ uint32_t ByteBuffer::GetUint32() {
         return 0;
     }
     uint32_t* p = reinterpret_cast<uint32_t*>(&m_buf[m_offset]);
+    uint32_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap32(*p);
+        copy = byteSwap32(copy);
     }
     m_offset += size;
-    return *p;
+    return copy;
 }
 
 uint64_t ByteBuffer::GetUint64() {
@@ -170,11 +175,12 @@ uint64_t ByteBuffer::GetUint64() {
         return 0;
     }
     uint64_t* p = reinterpret_cast<uint64_t*>(&m_buf[m_offset]);
+    uint64_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap64(*p);
+        copy = byteSwap64(copy);
     }
     m_offset += size;
-    return *p;
+    return copy;
 }
 
 float ByteBuffer::GetFloat() {
@@ -184,11 +190,12 @@ float ByteBuffer::GetFloat() {
         return 0;
     }
     uint32_t* p = reinterpret_cast<uint32_t*>(&m_buf[m_offset]);
+    uint32_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap32(*p);
+        copy = byteSwap32(copy);
     }
     m_offset += size;
-    volatile float* f = reinterpret_cast<float*>(p);
+    volatile float* f = reinterpret_cast<float*>(&copy);
     return *f;
 }
 
@@ -199,11 +206,12 @@ double ByteBuffer::GetDouble() {
         return 0;
     }
     uint64_t* p = reinterpret_cast<uint64_t*>(&m_buf[m_offset]);
+    uint64_t copy = *p;
     if (m_shouldConvertEndian) {
-        *p = byteSwap64(*p);
+        copy = byteSwap64(*p);
     }
     m_offset += size;
-    volatile double* d = reinterpret_cast<double*>(p);
+    volatile double* d = reinterpret_cast<double*>(&copy);
     return *d;
 }
 

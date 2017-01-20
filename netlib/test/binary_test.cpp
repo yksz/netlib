@@ -52,9 +52,7 @@ TEST(ByteBuffer, PutAndGetUnsigned) {
     ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
     unsigned char str2[5] = {0};
     r.Get(str2, sizeof(str2));
-    for (size_t i = 0; i < sizeof(str1); i++) {
-        EXPECT_EQ(str1[i], str2[i]);
-    }
+    EXPECT_EQ(0, memcmp(str1, str2, sizeof(str1)));
     EXPECT_FALSE(r.GetBool());
     EXPECT_EQ(1, r.GetUint8());
     EXPECT_EQ(2, r.GetUint16());
@@ -66,14 +64,22 @@ TEST(ByteBuffer, PutAndGetUnsigned) {
 
 TEST(ByteBuffer, GetInt32_BigEndian) {
     char buf[] = {0x00, 0x00, 0x00, 0x01};
+    char copy[4];
+    memcpy(copy, buf, sizeof(buf));
+
     ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
     EXPECT_EQ(1, r.GetInt32());
+    EXPECT_EQ(0, memcmp(buf, copy, sizeof(buf)));
 }
 
 TEST(ByteBuffer, GetInt32_LittleEndian) {
     char buf[] = {0x01, 0x00, 0x00, 0x00};
+    char copy[4];
+    memcpy(copy, buf, sizeof(buf));
+
     ByteBuffer r(buf, sizeof(buf), ByteOrder::LittleEndian);
     EXPECT_EQ(1, r.GetInt32());
+    EXPECT_EQ(0, memcmp(buf, copy, sizeof(buf)));
 }
 
 TEST(ByteBuffer, PutInt32_BigEndian) {
