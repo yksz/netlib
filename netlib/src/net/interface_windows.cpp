@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstddef>
 #include <codecvt>
+#include <locale>
 #include <winsock2.h>
 #include <iphlpapi.h>
 
