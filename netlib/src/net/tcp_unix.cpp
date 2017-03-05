@@ -226,6 +226,7 @@ error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return toError(errno);
     }
+    m_timeoutMilliseconds = timeoutMilliseconds;
     return error::nil;
 }
 

@@ -21,7 +21,7 @@ using SocketFD = int;
 class TCPSocket final : public Closer, public Reader, public Writer {
 public:
     TCPSocket(const SocketFD& fd, const std::string& addr)
-            : m_fd(fd), m_remoteAddr(addr), m_closed(false) {};
+            : m_fd(fd), m_remoteAddr(addr), m_closed(false), m_timeoutMilliseconds(0) {};
     ~TCPSocket();
     TCPSocket(const TCPSocket&) = delete;
     TCPSocket& operator=(const TCPSocket&) = delete;
@@ -40,6 +40,7 @@ private:
     const SocketFD m_fd;
     const std::string m_remoteAddr;
     std::atomic<bool> m_closed;
+    int64_t m_timeoutMilliseconds;
 };
 
 class TCPListener final : public Closer {
