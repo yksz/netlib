@@ -158,16 +158,16 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     return error::nil;
 }
 
-error UDPSocket::SetSocketTimeout(int64_t timeout) {
+error UDPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
     }
 
     struct timeval soTimeout;
-    timeout = (timeout > 0) ? timeout : 0;
-    soTimeout.tv_sec = timeout / 1000;
-    soTimeout.tv_usec = timeout % 1000 * 1000;
+    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
+    soTimeout.tv_sec = timeoutMilliseconds / 1000;
+    soTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return toError(errno);

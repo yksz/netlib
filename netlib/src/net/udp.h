@@ -37,9 +37,9 @@ public:
     error WriteTo(const char* buf, size_t len,
            const std::string& addr, uint16_t port, int* nbytes);
     /**
-     * @param[in] timeout Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
+     * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetSocketTimeout(int64_t timeout);
+    error SetSocketTimeout(int64_t timeoutMilliseconds);
 
 private:
     const SocketFD m_fd;

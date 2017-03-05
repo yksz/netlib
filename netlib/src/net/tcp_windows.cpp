@@ -10,7 +10,7 @@ namespace net {
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
-error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMilliseconds,
         std::shared_ptr<TCPSocket>* clientSock) {
     if (clientSock == nullptr) {
         assert(0 && "clientSock must not be nullptr");
@@ -36,7 +36,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = inet_addr(ipAddr.c_str());
 
-    if (timeout <= 0) { // connect in blocking mode
+    if (timeoutMilliseconds <= 0) { // connect in blocking mode
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
             int err = WSAGetLastError();
             closesocket(fd);
@@ -63,9 +63,9 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
     FD_SET(fd, &exceptfds);
 
     struct timeval connTimeout;
-    timeout = (timeout > 0) ? timeout : 0;
-    connTimeout.tv_sec = timeout / 1000;
-    connTimeout.tv_usec = timeout % 1000 * 1000;
+    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
+    connTimeout.tv_sec = timeoutMilliseconds / 1000;
+    connTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
 
     int connErr = 0;
     int result = select(0, nullptr, &writefds, &exceptfds, &connTimeout);
@@ -193,13 +193,13 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
     return error::nil;
 }
 
-error TCPSocket::SetSocketTimeout(int64_t timeout) {
+error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
     }
 
-    DWORD soTimeout = (DWORD) ((timeout > 0) ? timeout : 0);
+    DWORD soTimeout = (DWORD) ((timeoutMilliseconds > 0) ? timeoutMilliseconds : 0);
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
         return toError(WSAGetLastError());

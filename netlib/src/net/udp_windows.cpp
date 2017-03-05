@@ -153,13 +153,13 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     return error::nil;
 }
 
-error UDPSocket::SetSocketTimeout(int64_t timeout) {
+error UDPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
     }
 
-    DWORD soTimeout = (DWORD) ((timeout > 0) ? timeout : 0);
+    DWORD soTimeout = (DWORD) ((timeoutMilliseconds > 0) ? timeoutMilliseconds : 0);
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
         return toError(WSAGetLastError());

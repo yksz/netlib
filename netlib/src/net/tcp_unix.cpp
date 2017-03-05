@@ -17,7 +17,7 @@ namespace net {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
-error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMilliseconds,
         std::shared_ptr<TCPSocket>* clientSock) {
     if (clientSock == nullptr) {
         assert(0 && "clientSock must not be nullptr");
@@ -43,7 +43,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(ipAddr.c_str());
 
-    if (timeout <= 0) { // connect in blocking mode
+    if (timeoutMilliseconds <= 0) { // connect in blocking mode
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
             int err = errno;
             close(fd);
@@ -74,9 +74,9 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
         FD_SET(fd, &exceptfds);
 
         struct timeval connTimeout;
-        timeout = (timeout > 0) ? timeout : 0;
-        connTimeout.tv_sec = timeout / 1000;
-        connTimeout.tv_usec = timeout % 1000 * 1000;
+        timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
+        connTimeout.tv_sec = timeoutMilliseconds / 1000;
+        connTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
 
         errno = 0;
         int result = select(fd + 1, nullptr, &writefds, &exceptfds, &connTimeout);
@@ -104,7 +104,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
 
         struct timeval now;
         gettimeofday(&now, nullptr);
-        timeout -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
+        timeoutMilliseconds -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
         prev = now;
     }
 
@@ -209,16 +209,16 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
     return error::nil;
 }
 
-error TCPSocket::SetSocketTimeout(int64_t timeout) {
+error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
     }
 
     struct timeval soTimeout;
-    timeout = (timeout > 0) ? timeout : 0;
-    soTimeout.tv_sec = timeout / 1000;
-    soTimeout.tv_usec = timeout % 1000 * 1000;
+    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
+    soTimeout.tv_sec = timeoutMilliseconds / 1000;
+    soTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return toError(errno);

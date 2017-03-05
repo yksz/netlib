@@ -31,9 +31,9 @@ public:
     error Read(char* buf, size_t len, int* nbytes);
     error Write(const char* buf, size_t len, int* nbytes);
     /**
-     * @param[in] timeout Set the timeout in milliseconds.
+     * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetSocketTimeout(int64_t timeout);
+    error SetSocketTimeout(int64_t timeoutMilliseconds);
     std::string RemoteAddress() { return m_remoteAddr; };
 
 private:
@@ -65,10 +65,10 @@ private:
 /**
  * @param[in] host A hostname or IPv4
  * @param[in] port
- * @param[in] timeout Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
+ * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
  * @param[out] clientSock
  */
-error ConnectTCP(const std::string& host, uint16_t port, int64_t timeout,
+error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMilliseconds,
         std::shared_ptr<TCPSocket>* clientSock);
 
 /**
