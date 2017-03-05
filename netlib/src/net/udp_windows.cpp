@@ -159,12 +159,12 @@ error UDPSocket::SetSocketTimeout(int64_t timeout) {
         return error::illegal_state;
     }
 
-    timeout = (timeout > 0) ? timeout : 0;
+    DWORD soTimeout = (DWORD) ((timeout > 0) ? timeout : 0);
 
-    if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &timeout, sizeof(timeout)) == SOCKET_ERROR) {
+    if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
         return toError(WSAGetLastError());
     }
-    if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (const char*) &timeout, sizeof(timeout)) == SOCKET_ERROR) {
+    if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
         return toError(WSAGetLastError());
     }
     return error::nil;
