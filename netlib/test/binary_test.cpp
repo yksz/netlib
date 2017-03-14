@@ -8,7 +8,7 @@ TEST(ByteBuffer, PutAndGetSigned) {
     char buf[33];
 
     // write
-    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::kBigEndian);
     const char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutBool(true);
@@ -20,7 +20,7 @@ TEST(ByteBuffer, PutAndGetSigned) {
     w.PutDouble(-6.0);
 
     // read
-    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::kBigEndian);
     char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     EXPECT_STREQ(str1, str2);
@@ -37,7 +37,7 @@ TEST(ByteBuffer, PutAndGetUnsigned) {
     char buf[33];
 
     // write
-    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::kBigEndian);
     const unsigned char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutBool(false);
@@ -49,7 +49,7 @@ TEST(ByteBuffer, PutAndGetUnsigned) {
     w.PutDouble(6.0);
 
     // read
-    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::kBigEndian);
     unsigned char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     EXPECT_EQ(0, memcmp(str1, str2, sizeof(str1)));
@@ -67,7 +67,7 @@ TEST(ByteBuffer, GetInt32_BigEndian) {
     char copy[4];
     memcpy(copy, buf, sizeof(buf));
 
-    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::kBigEndian);
     EXPECT_EQ(1, r.GetInt32());
     EXPECT_EQ(0, memcmp(buf, copy, sizeof(buf)));
 }
@@ -77,14 +77,14 @@ TEST(ByteBuffer, GetInt32_LittleEndian) {
     char copy[4];
     memcpy(copy, buf, sizeof(buf));
 
-    ByteBuffer r(buf, sizeof(buf), ByteOrder::LittleEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::kLittleEndian);
     EXPECT_EQ(1, r.GetInt32());
     EXPECT_EQ(0, memcmp(buf, copy, sizeof(buf)));
 }
 
 TEST(ByteBuffer, PutInt32_BigEndian) {
     char buf[4] = {0};
-    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::kBigEndian);
     w.PutInt32(1);
     EXPECT_EQ(0x00, buf[0]);
     EXPECT_EQ(0x00, buf[1]);
@@ -94,7 +94,7 @@ TEST(ByteBuffer, PutInt32_BigEndian) {
 
 TEST(ByteBuffer, PutInt32_LittleEndian) {
     char buf[4] = {0};
-    ByteBuffer w(buf, sizeof(buf), ByteOrder::LittleEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::kLittleEndian);
     w.PutInt32(1);
     EXPECT_EQ(0x01, buf[0]);
     EXPECT_EQ(0x00, buf[1]);
