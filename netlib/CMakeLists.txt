@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.7)
 project(net CXX)
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
-set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
 option(build_tests "Build all of own tests." OFF)
