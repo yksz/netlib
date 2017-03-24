@@ -10,6 +10,43 @@ namespace net {
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
+static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefds,
+        int64_t timeoutMilliseconds) {
+    if (readfds != nullptr) {
+        FD_ZERO(readfds);
+        FD_SET(fd, readfds);
+    }
+    if (writefds != nullptr) {
+        FD_ZERO(writefds);
+        FD_SET(fd, writefds);
+    }
+    fd_set exceptfds;
+    FD_ZERO(&exceptfds);
+    FD_SET(fd, &exceptfds);
+
+    struct timeval timeout;
+    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
+    timeout.tv_sec = timeoutMilliseconds / 1000;
+    timeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
+
+    int result = select(0, readfds, writefds, &exceptfds, &timeout);
+    if (result == SOCKET_ERROR) {
+        return toError(WSAGetLastError());
+    } else if (result == 0) {
+        return toError(WSAETIMEDOUT);
+    } else if (!FD_ISSET(fd, &exceptfds)) {
+        return error::nil;
+    } else {
+        int soErr = 0;
+        int optlen = sizeof(soErr);
+        getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soErr, &optlen);
+        if (soErr != 0) {
+            return toError(soErr);
+        }
+        return error::nil;
+    }
+}
+
 error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMilliseconds,
         std::shared_ptr<TCPSocket>* clientSock) {
     if (clientSock == nullptr) {
@@ -56,45 +93,15 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
     }
 
     fd_set writefds;
-    fd_set exceptfds;
-    FD_ZERO(&writefds);
-    FD_ZERO(&exceptfds);
-    FD_SET(fd, &writefds);
-    FD_SET(fd, &exceptfds);
-
-    struct timeval connTimeout;
-    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
-    connTimeout.tv_sec = timeoutMilliseconds / 1000;
-    connTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
-
-    int connErr = 0;
-    int result = select(0, nullptr, &writefds, &exceptfds, &connTimeout);
-    if (result == SOCKET_ERROR) {
-        connErr = WSAGetLastError();
-        goto fail;
-    } else if (result == 0) {
-        connErr = WSAETIMEDOUT;
-        goto fail;
-    } else if (!FD_ISSET(fd, &exceptfds)) {
-        connErr = 0;
-    } else {
-        int soErr = 0;
-        int optlen = sizeof(soErr);
-        getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soErr, &optlen);
-        if (soErr != 0) {
-            connErr = soErr;
-            goto fail;
-        }
-    }
-    if (connErr == 0) {
-        ioctlsocket(fd, FIONBIO, &kBlockingMode);
-        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-        return error::nil;
+    error err = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
+    if (err != error::nil) {
+        closesocket(fd);
+        return err;
     }
 
-fail:
-    closesocket(fd);
-    return toError(connErr);
+    ioctlsocket(fd, FIONBIO, &kBlockingMode);
+    *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
+    return error::nil;
 }
 
 error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock) {
@@ -158,18 +165,40 @@ bool TCPSocket::IsClosed() {
     return m_closed;
 }
 
+static error read(const SocketFD& fd, char* buf, size_t len, int* nbytes) {
+    int size = recv(fd, buf, len, 0);
+    if (size == SOCKET_ERROR) {
+        return toError(WSAGetLastError());
+    }
+    if (size == 0) {
+        return error::eof;
+    }
+    if (nbytes != nullptr) {
+        *nbytes = size;
+    }
+    return error::nil;
+}
+
 error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
     }
 
-    int size = recv(m_fd, buf, len, 0);
+    if (m_timeoutMilliseconds > 0) {
+        fd_set readfds;
+        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        if (err != error::nil) {
+            return err;
+        }
+    }
+    return read(m_fd, buf, len, nbytes);
+}
+
+static error write(const SocketFD& fd, const char* buf, size_t len, int* nbytes) {
+    int size = send(fd, buf, len, 0);
     if (size == SOCKET_ERROR) {
         return toError(WSAGetLastError());
-    }
-    if (size == 0) {
-        return error::eof;
     }
     if (nbytes != nullptr) {
         *nbytes = size;
@@ -183,14 +212,14 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
         return error::illegal_state;
     }
 
-    int size = send(m_fd, buf, len, 0);
-    if (size == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+    if (m_timeoutMilliseconds > 0) {
+        fd_set writefds;
+        error err = waitUntilReady(m_fd, nullptr, &writefds, m_timeoutMilliseconds);
+        if (err != error::nil) {
+            return err;
+        }
     }
-    if (nbytes != nullptr) {
-        *nbytes = size;
-    }
-    return error::nil;
+    return write(m_fd, buf, len, nbytes);
 }
 
 error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
@@ -199,14 +228,12 @@ error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
         return error::illegal_state;
     }
 
-    DWORD soTimeout = (DWORD) ((timeoutMilliseconds > 0) ? timeoutMilliseconds : 0);
-
-    if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+    if (timeoutMilliseconds > 0) {
+        ioctlsocket(m_fd, FIONBIO, &kNonBlockingMode);
+    } else {
+        ioctlsocket(m_fd, FIONBIO, &kBlockingMode);
     }
-    if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
-    }
+    m_timeoutMilliseconds = timeoutMilliseconds;
     return error::nil;
 }
 
