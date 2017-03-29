@@ -75,7 +75,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         return toError(err);
     }
 
-    error err;
+    error err = error::nil;
     struct ifreq* it = ifc.ifc_req;
     struct ifreq* end = it + (ifc.ifc_len / sizeof(struct ifreq));
     for (; it != end; it++) {
