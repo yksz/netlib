@@ -76,6 +76,6 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
  * @param[in] port
  * @param[out] serverSock
  */
-error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock);
+error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock);
 
 } // namespace net

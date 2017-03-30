@@ -113,7 +113,7 @@ fail:
     return toError(connErr);
 }
 
-error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock) {
+error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
     if (serverSock == nullptr) {
         assert(0 && "serverSock must not be nullptr");
         return error::illegal_argument;
@@ -144,7 +144,7 @@ error ListenTCP(uint16_t port, std::unique_ptr<TCPListener>* serverSock) {
     if (listen(fd, SOMAXCONN) == -1) {
         goto fail;
     } else {
-        *serverSock = std::unique_ptr<TCPListener>(new TCPListener(fd));
+        *serverSock = std::make_shared<TCPListener>(fd);
         return error::nil;
     }
 

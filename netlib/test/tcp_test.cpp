@@ -18,7 +18,7 @@ TEST(TCP, ListenAndConnect) {
     std::thread th([&]() {
         error err;
 
-        std::unique_ptr<TCPListener> listener;
+        std::shared_ptr<TCPListener> listener;
         err = ListenTCP(port, &listener);
         EXPECT_EQ(error::nil, err);
         {

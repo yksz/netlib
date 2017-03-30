@@ -29,7 +29,7 @@ static void handle(const std::shared_ptr<TCPSocket>& clientSock) {
 int main(void) {
     setvbuf(stdout, nullptr, _IONBF, 0);
 
-    std::unique_ptr<TCPListener> listener;
+    std::shared_ptr<TCPListener> listener;
     error err = ListenTCP(kPort, &listener);
     if (err != error::nil) {
         printf("%s\n", ErrorMessage(err));
