@@ -17,6 +17,42 @@ namespace net {
 static const int kBlockingMode = 0;
 static const int kNonBlockingMode = 1;
 
+static void toTimeval(int64_t milliseconds, struct timeval* dest) {
+    milliseconds = (milliseconds > 0) ? milliseconds : 0;
+    dest->tv_sec = milliseconds / 1000;
+    dest->tv_usec = milliseconds % 1000 * 1000;
+}
+
+static error waitUntilReady(const int& fd, fd_set* readfds, fd_set* writefds,
+        int64_t timeoutMilliseconds) {
+    if (readfds != nullptr) {
+        FD_ZERO(readfds);
+        FD_SET(fd, readfds);
+    }
+    if (writefds != nullptr) {
+        FD_ZERO(writefds);
+        FD_SET(fd, writefds);
+    }
+
+    struct timeval timeout;
+    toTimeval(timeoutMilliseconds, &timeout);
+
+    int result = select(fd + 1, readfds, writefds, nullptr, &timeout);
+    if (result == -1) {
+        return toError(errno);
+    } else if (result == 0) {
+        return error::timedout;
+    } else {
+        int soErr = 0;
+        socklen_t optlen = sizeof(soErr);
+        getsockopt(fd, SOL_SOCKET, SO_ERROR, &soErr, &optlen);
+        if (soErr != 0) {
+            return toError(soErr);
+        }
+        return error::nil;
+    }
+}
+
 error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMilliseconds,
         std::shared_ptr<TCPSocket>* clientSock) {
     if (clientSock == nullptr) {
@@ -51,66 +87,26 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         }
         *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
         return error::nil;
-    }
-
-    ioctl(fd, FIONBIO, &kNonBlockingMode);
-    if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-        if (errno != EINPROGRESS && errno != EALREADY && errno != EINTR) {
+    } else { // connect in non blocking mode
+        ioctl(fd, FIONBIO, &kNonBlockingMode);
+        if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
             int err = errno;
-            close(fd);
-            return toError(err);
-        }
-    }
-
-    struct timeval prev;
-    gettimeofday(&prev, nullptr);
-
-    int connErr = 0;
-    while (true) {
-        fd_set writefds, exceptfds;
-        FD_ZERO(&writefds);
-        FD_ZERO(&exceptfds);
-        FD_SET(fd, &writefds);
-        FD_SET(fd, &exceptfds);
-
-        struct timeval connTimeout;
-        timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
-        connTimeout.tv_sec = timeoutMilliseconds / 1000;
-        connTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
-
-        errno = 0;
-        int result = select(fd + 1, nullptr, &writefds, &exceptfds, &connTimeout);
-        if (result == -1) {
-            connErr = errno;
-            goto fail;
-        } else if (result == 0) {
-            connErr = ETIMEDOUT;
-            goto fail;
-        } else {
-            int soErr;
-            socklen_t optlen = sizeof(soErr);
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &soErr, &optlen);
-            if (soErr == EINPROGRESS || soErr == EALREADY || soErr == EINTR) {
-                continue;
-            } else if (soErr == 0 || soErr == EISCONN) {
-                ioctl(fd, FIONBIO, &kBlockingMode);
-                *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-                return error::nil;
-            } else {
-                connErr = soErr;
-                goto fail;
+            if (err != EINPROGRESS) {
+                close(fd);
+                return toError(err);
             }
         }
+        fd_set writefds;
+        error connErr = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
+        if (connErr != error::nil) {
+            close(fd);
+            return connErr;
+        }
 
-        struct timeval now;
-        gettimeofday(&now, nullptr);
-        timeoutMilliseconds -= (now.tv_sec - prev.tv_sec) * 1000 + (now.tv_usec - prev.tv_usec) / 1000;
-        prev = now;
+        ioctl(fd, FIONBIO, &kBlockingMode);
+        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
+        return error::nil;
     }
-
-fail:
-    close(fd);
-    return toError(connErr);
 }
 
 error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
@@ -216,10 +212,7 @@ error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
     }
 
     struct timeval soTimeout;
-    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
-    soTimeout.tv_sec = timeoutMilliseconds / 1000;
-    soTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
-
+    toTimeval(timeoutMilliseconds, &soTimeout);
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return toError(errno);
     }

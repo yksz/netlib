@@ -10,6 +10,12 @@ namespace net {
 static unsigned long kBlockingMode = 0;
 static unsigned long kNonBlockingMode = 1;
 
+static void toTimeval(int64_t milliseconds, struct timeval* dest) {
+    milliseconds = (milliseconds > 0) ? milliseconds : 0;
+    dest->tv_sec = milliseconds / 1000;
+    dest->tv_usec = milliseconds % 1000 * 1000;
+}
+
 static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefds,
         int64_t timeoutMilliseconds) {
     if (readfds != nullptr) {
@@ -20,22 +26,15 @@ static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefd
         FD_ZERO(writefds);
         FD_SET(fd, writefds);
     }
-    fd_set exceptfds;
-    FD_ZERO(&exceptfds);
-    FD_SET(fd, &exceptfds);
 
     struct timeval timeout;
-    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
-    timeout.tv_sec = timeoutMilliseconds / 1000;
-    timeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
+    toTimeval(timeoutMilliseconds, &timeout);
 
-    int result = select(0, readfds, writefds, &exceptfds, &timeout);
+    int result = select(0, readfds, writefds, nullptr, &timeout);
     if (result == SOCKET_ERROR) {
         return toError(WSAGetLastError());
     } else if (result == 0) {
-        return toError(WSAETIMEDOUT);
-    } else if (!FD_ISSET(fd, &exceptfds)) {
-        return error::nil;
+        return error::timedout;
     } else {
         int soErr = 0;
         int optlen = sizeof(soErr);
@@ -81,27 +80,26 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         }
         *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
         return error::nil;
-    }
-
-    ioctlsocket(fd, FIONBIO, &kNonBlockingMode);
-    if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        int err = WSAGetLastError();
-        if (err != WSAEWOULDBLOCK) {
-            closesocket(fd);
-            return toError(err);
+    } else { // connect in non blocking mode
+        ioctlsocket(fd, FIONBIO, &kNonBlockingMode);
+        if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+            int err = WSAGetLastError();
+            if (err != WSAEWOULDBLOCK) {
+                closesocket(fd);
+                return toError(err);
+            }
         }
-    }
+        fd_set writefds;
+        error connErr = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
+        if (connErr != error::nil) {
+            closesocket(fd);
+            return connErr;
+        }
 
-    fd_set writefds;
-    error err = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
-    if (err != error::nil) {
-        closesocket(fd);
-        return err;
+        ioctlsocket(fd, FIONBIO, &kBlockingMode);
+        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
+        return error::nil;
     }
-
-    ioctlsocket(fd, FIONBIO, &kBlockingMode);
-    *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-    return error::nil;
 }
 
 error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
