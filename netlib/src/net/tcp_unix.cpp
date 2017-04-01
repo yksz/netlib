@@ -205,7 +205,7 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
     return error::nil;
 }
 
-error TCPSocket::SetSocketTimeout(int64_t timeoutMilliseconds) {
+error TCPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     if (m_closed) {
         assert(0 && "Already closed");
         return error::illegal_state;
@@ -249,6 +249,14 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
         return error::illegal_argument;
     }
 
+    if (m_timeoutMilliseconds > 0) {
+        fd_set readfds;
+        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        if (err != error::nil) {
+            return err;
+        }
+    }
+
     struct sockaddr_in clientAddr;
     socklen_t len = sizeof(clientAddr);
 
@@ -256,8 +264,17 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
     if (clientFD == -1) {
         return toError(errno);
     }
-
     *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
+    return error::nil;
+}
+
+error TCPListener::SetTimeout(int64_t timeoutMilliseconds) {
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+    m_timeoutMilliseconds = timeoutMilliseconds;
     return error::nil;
 }
 

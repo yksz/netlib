@@ -33,7 +33,7 @@ public:
     /**
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetSocketTimeout(int64_t timeoutMilliseconds);
+    error SetTimeout(int64_t timeoutMilliseconds);
     std::string RemoteAddress() { return m_remoteAddr; };
 
 private:
@@ -46,7 +46,7 @@ private:
 class TCPListener final : public Closer {
 public:
     explicit TCPListener(const SocketFD& fd)
-            : m_fd(fd), m_closed(false) {};
+            : m_fd(fd), m_closed(false), m_timeoutMilliseconds(0) {};
     ~TCPListener();
     TCPListener(const TCPListener&) = delete;
     TCPListener& operator=(const TCPListener&) = delete;
@@ -57,10 +57,15 @@ public:
      * @param[out] clientSock
      */
     error Accept(std::shared_ptr<TCPSocket>* clientSock);
+    /**
+     * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
+     */
+    error SetTimeout(int64_t timeoutMilliseconds);
 
 private:
     const SocketFD m_fd;
     std::atomic<bool> m_closed;
+    int64_t m_timeoutMilliseconds;
 };
 
 /**
