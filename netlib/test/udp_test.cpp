@@ -1,6 +1,5 @@
 #include "net/udp.h"
-#include <condition_variable>
-#include <mutex>
+#include <future>
 #include <string>
 #include <thread>
 #include <gtest/gtest.h>
@@ -9,10 +8,11 @@ using namespace net;
 
 TEST(UDP, ListenAndConnect) {
     // setup:
+    const std::string host = "localhost";
     const unsigned int port = 8080;
     const char message[] = "message";
-    std::condition_variable condition;
-    std::mutex mutex;
+    std::promise<bool> promise;
+    auto future = promise.get_future();
 
     // when: run a UDP server
     std::thread th([&]() {
@@ -21,10 +21,8 @@ TEST(UDP, ListenAndConnect) {
         std::shared_ptr<UDPSocket> socket;
         err = ListenUDP(port, &socket);
         EXPECT_EQ(error::nil, err);
-        {
-            std::unique_lock<std::mutex> lock(mutex);
-            condition.notify_one();
-        }
+
+        promise.set_value(true);
 
         // then: receive the message
         char buf[256] = {0};
@@ -33,16 +31,13 @@ TEST(UDP, ListenAndConnect) {
         EXPECT_STREQ(message, buf);
     });
     // wait until the UDP server starts to running
-    {
-        std::unique_lock<std::mutex> lock(mutex);
-        condition.wait(lock);
-    }
+    future.get();
 
-    // when: connect to the UDP server
     error err;
 
+    // when: connect to the UDP server
     std::shared_ptr<UDPSocket> socket;
-    err = ConnectUDP("localhost", port, &socket);
+    err = ConnectUDP(host, port, &socket);
     EXPECT_EQ(error::nil, err);
 
     // when: send a message
