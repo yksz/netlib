@@ -18,7 +18,7 @@ using SocketFD = SOCKET;
 using SocketFD = int;
 #endif // defined(_WIN32) || defined(_WIN64)
 
-class UDPSocket final : public Closer, public Reader, public Writer {
+class UDPSocket final : public ReadWriteCloser {
 public:
     UDPSocket(const SocketFD& fd)
             : m_fd(fd), m_remoteAddr(""), m_remotePort(0), m_closed(false) {};

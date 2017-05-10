@@ -18,7 +18,7 @@ using SocketFD = SOCKET;
 using SocketFD = int;
 #endif // defined(_WIN32) || defined(_WIN64)
 
-class TCPSocket final : public Closer, public Reader, public Writer {
+class TCPSocket final : public ReadWriteCloser {
 public:
     TCPSocket(const SocketFD& fd, const std::string& addr)
             : m_fd(fd), m_remoteAddr(addr), m_closed(false), m_timeoutMilliseconds(0) {};

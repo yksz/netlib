@@ -33,4 +33,8 @@ struct Writer {
     error WriteFull(const char* buf, size_t len);
 };
 
+struct ReadWriter : public Reader, public Writer {};
+
+struct ReadWriteCloser : public ReadWriter, public Closer {};
+
 } // namespace net
