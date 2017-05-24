@@ -39,7 +39,7 @@ public:
     /**
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetSocketTimeout(int64_t timeoutMilliseconds);
+    error SetTimeout(int64_t timeoutMilliseconds);
 
 private:
     const SocketFD m_fd;
