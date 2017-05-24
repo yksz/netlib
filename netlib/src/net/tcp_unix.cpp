@@ -166,10 +166,6 @@ error TCPSocket::Close() {
     return error::nil;
 }
 
-bool TCPSocket::IsClosed() {
-    return m_closed;
-}
-
 error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
@@ -237,10 +233,6 @@ error TCPListener::Close() {
     }
     m_closed = true;
     return error::nil;
-}
-
-bool TCPListener::IsClosed() {
-    return m_closed;
 }
 
 error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {

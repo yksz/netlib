@@ -26,8 +26,8 @@ public:
     TCPSocket(const TCPSocket&) = delete;
     TCPSocket& operator=(const TCPSocket&) = delete;
 
+    bool IsClosed() { return m_closed; }
     error Close();
-    bool IsClosed();
     error Read(char* buf, size_t len, int* nbytes);
     error Write(const char* buf, size_t len, int* nbytes);
     /**
@@ -51,8 +51,8 @@ public:
     TCPListener(const TCPListener&) = delete;
     TCPListener& operator=(const TCPListener&) = delete;
 
+    bool IsClosed() { return m_closed; }
     error Close();
-    bool IsClosed();
     /**
      * @param[out] clientSock
      */

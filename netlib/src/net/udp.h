@@ -28,8 +28,8 @@ public:
     UDPSocket(const UDPSocket&) = delete;
     UDPSocket& operator=(const UDPSocket&) = delete;
 
+    bool IsClosed() { return m_closed; }
     error Close();
-    bool IsClosed();
     error Read(char* buf, size_t len, int* nbytes);
     error ReadFrom(char* buf, size_t len, int* nbytes,
             std::string* addr, uint16_t* port);

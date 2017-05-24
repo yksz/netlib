@@ -73,10 +73,6 @@ error UDPSocket::Close() {
     return error::nil;
 }
 
-bool UDPSocket::IsClosed() {
-    return m_closed;
-}
-
 error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
     if (m_closed) {
         assert(0 && "Already closed");
