@@ -6,12 +6,12 @@
 namespace net {
 
 struct Closer {
-    virtual ~Closer() {};
+    virtual ~Closer() {}
     virtual error Close() = 0;
 };
 
 struct Reader {
-    virtual ~Reader() {};
+    virtual ~Reader() {}
     /**
      * @param[in] buf
      * @param[in] len
@@ -23,7 +23,7 @@ struct Reader {
 };
 
 struct Writer {
-    virtual ~Writer() {};
+    virtual ~Writer() {}
     /**
      * @param[in] buf
      * @param[in] len

@@ -21,9 +21,9 @@ using SocketFD = int;
 class UDPSocket final : public ReadWriteCloser {
 public:
     UDPSocket(const SocketFD& fd)
-            : m_fd(fd), m_remoteAddr(""), m_remotePort(0), m_closed(false) {};
+            : m_fd(fd), m_remoteAddr(""), m_remotePort(0), m_closed(false) {}
     UDPSocket(const SocketFD& fd, const std::string& addr, uint16_t port)
-            : m_fd(fd), m_remoteAddr(addr), m_remotePort(port), m_closed(false) {};
+            : m_fd(fd), m_remoteAddr(addr), m_remotePort(port), m_closed(false) {}
     ~UDPSocket();
     UDPSocket(const UDPSocket&) = delete;
     UDPSocket& operator=(const UDPSocket&) = delete;
@@ -40,6 +40,7 @@ public:
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetTimeout(int64_t timeoutMilliseconds);
+    SocketFD FD() { return m_fd; }
 
 private:
     const SocketFD m_fd;

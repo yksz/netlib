@@ -21,7 +21,7 @@ using SocketFD = int;
 class TCPSocket final : public ReadWriteCloser {
 public:
     TCPSocket(const SocketFD& fd, const std::string& addr)
-            : m_fd(fd), m_remoteAddr(addr), m_closed(false), m_timeoutMilliseconds(0) {};
+            : m_fd(fd), m_remoteAddr(addr), m_closed(false), m_timeoutMilliseconds(0) {}
     ~TCPSocket();
     TCPSocket(const TCPSocket&) = delete;
     TCPSocket& operator=(const TCPSocket&) = delete;
@@ -34,7 +34,8 @@ public:
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetTimeout(int64_t timeoutMilliseconds);
-    std::string RemoteAddress() { return m_remoteAddr; };
+    SocketFD FD() { return m_fd; }
+    std::string RemoteAddress() { return m_remoteAddr; }
 
 private:
     const SocketFD m_fd;
@@ -46,7 +47,7 @@ private:
 class TCPListener final : public Closer {
 public:
     explicit TCPListener(const SocketFD& fd)
-            : m_fd(fd), m_closed(false), m_timeoutMilliseconds(0) {};
+            : m_fd(fd), m_closed(false), m_timeoutMilliseconds(0) {}
     ~TCPListener();
     TCPListener(const TCPListener&) = delete;
     TCPListener& operator=(const TCPListener&) = delete;
@@ -61,6 +62,7 @@ public:
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetTimeout(int64_t timeoutMilliseconds);
+    SocketFD FD() { return m_fd; }
 
 private:
     const SocketFD m_fd;
