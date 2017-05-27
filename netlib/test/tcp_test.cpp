@@ -88,6 +88,8 @@ TEST(TCP, SocketTimeout) {
     const unsigned int port = 8080;
     const int64_t connectionTimeout = 1000; // ms
     const int64_t socketTimeout = 10; // ms
+    std::promise<bool> promise;
+    auto future = promise.get_future();
 
     // when: run a TCP server
     std::thread th([&]() {
@@ -97,12 +99,16 @@ TEST(TCP, SocketTimeout) {
         err = ListenTCP(port, &listener);
         EXPECT_EQ(error::nil, err);
 
+        promise.set_value(true);
+
         std::shared_ptr<TCPSocket> socket;
         err = listener->Accept(&socket);
         EXPECT_EQ(error::nil, err);
 
         std::this_thread::sleep_for(milliseconds(socketTimeout * 2));
     });
+    // wait until the TCP server starts to running
+    future.get();
 
     error err;
 
