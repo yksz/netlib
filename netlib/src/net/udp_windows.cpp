@@ -22,7 +22,7 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
 
     SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == INVALID_SOCKET) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
 
     *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
@@ -39,7 +39,7 @@ error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
 
     SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == INVALID_SOCKET) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
 
     struct sockaddr_in serverAddr = {0};
@@ -50,7 +50,7 @@ error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
         int err = WSAGetLastError();
         closesocket(fd);
-        return toError(err);
+        return error::wrap(etype::os, err);
     }
 
     *serverSock = std::make_shared<UDPSocket>(fd);
@@ -67,7 +67,7 @@ error UDPSocket::Close() {
     }
 
     if (closesocket(m_fd) == -1) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     m_closed = true;
     return error::nil;
@@ -81,7 +81,7 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     int size = recv(m_fd, buf, len, 0);
     if (size == -1) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (size == 0) {
         return error::eof;
@@ -103,7 +103,7 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
     int fromlen = sizeof(from);
     int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr*) &from, &fromlen);
     if (size == -1) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     *addr = inet_ntoa(from.sin_addr);
     *port = ntohs(from.sin_port);
@@ -141,7 +141,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_port = htons(port);
     int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
     if (size == -1) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (nbytes != nullptr) {
         *nbytes = size;
@@ -158,10 +158,10 @@ error UDPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     DWORD soTimeout = (DWORD) ((timeoutMilliseconds > 0) ? timeoutMilliseconds : 0);
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     return error::nil;
 }

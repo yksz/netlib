@@ -31,19 +31,11 @@ error LookupAddress(const std::string& host, std::string* addr) {
 
     int err = getaddrinfo(host.c_str(), nullptr, &hints, &result);
     if (err != 0) {
-        return toError(err);
+        return error::wrap(etype::netdb, err);
     }
     *addr = inet_ntoa(((struct sockaddr_in*) (result->ai_addr))->sin_addr);
     freeaddrinfo(result);
     return error::nil;
-}
-
-static error newError() {
-#if defined(_WIN32) || defined(_WIN64)
-    return toError(WSAGetLastError());
-#else
-    return toError(errno);
-#endif // defined(_WIN32) || defined(_WIN64)
 }
 
 error LookupLocalHostName(std::string* host) {
@@ -56,7 +48,11 @@ error LookupLocalHostName(std::string* host) {
 
     char name[256] = {0};
     if (gethostname(name, sizeof(name)) == -1) {
-        return newError();
+#if defined(_WIN32) || defined(_WIN64)
+        return error::wrap(etype::os, WSAGetLastError());
+#else
+        return error::wrap(etype::os, errno);
+#endif // defined(_WIN32) || defined(_WIN64)
     }
     *host = name;
     return error::nil;

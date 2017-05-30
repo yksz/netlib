@@ -16,7 +16,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
 
     struct ifaddrs* ifaddrs;
     if (getifaddrs(&ifaddrs) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     for (auto ifa = ifaddrs; ifa != nullptr; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr->sa_family != AF_LINK) {

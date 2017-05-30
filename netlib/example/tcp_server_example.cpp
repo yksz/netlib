@@ -18,7 +18,7 @@ static void handle(const std::shared_ptr<TCPSocket>& clientSock) {
             break;
         }
         if (err != error::nil) {
-            printf("%s\n", ErrorMessage(err));
+            printf("%s\n", error::Message(err));
             break;
         }
         printf("%s", buf);
@@ -32,7 +32,7 @@ int main(void) {
     std::shared_ptr<TCPListener> listener;
     error err = ListenTCP(kPort, &listener);
     if (err != error::nil) {
-        printf("%s\n", ErrorMessage(err));
+        printf("%s\n", error::Message(err));
         return 1;
     }
     printf("Listening on port %d\n", kPort);
@@ -40,7 +40,7 @@ int main(void) {
         std::shared_ptr<TCPSocket> socket;
         error err = listener->Accept(&socket);
         if (err != error::nil) {
-            printf("%s\n", ErrorMessage(err));
+            printf("%s\n", error::Message(err));
             continue;
         }
         printf("%s connected\n", socket->RemoteAddress().c_str());

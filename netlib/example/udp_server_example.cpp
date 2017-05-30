@@ -12,7 +12,7 @@ int main(void) {
     std::shared_ptr<UDPSocket> socket;
     error err = ListenUDP(kPort, &socket);
     if (err != error::nil) {
-        printf("%s\n", ErrorMessage(err));
+        printf("%s\n", error::Message(err));
         return 1;
     }
     printf("Listening on port %d\n", kPort);

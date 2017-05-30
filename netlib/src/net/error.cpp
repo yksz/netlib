@@ -10,13 +10,109 @@
 
 namespace net {
 
-static const std::map<error, const char*> errorMessages {
+const error error::unknown          = { etype::base, 0 };
+const error error::nil              = { etype::base, 1 };
+const error error::eof              = { etype::base, 2 };
+const error error::illegal_argument = { etype::base, 3 };
+const error error::illegal_state    = { etype::base, 4 };
+const error error::not_found        = { etype::base, 5 };
+
+#if defined(_WIN32) || defined(_WIN64)
+const error error::intr           = { etype::os, WSAEINTR           };
+const error error::badf           = { etype::os, WSAEBADF           };
+const error error::acces          = { etype::os, WSAEACCES          };
+const error error::fault          = { etype::os, WSAEFAULT          };
+const error error::inval          = { etype::os, WSAEINVAL          };
+const error error::mfile          = { etype::os, WSAEMFILE          };
+const error error::wouldblock     = { etype::os, WSAEWOULDBLOCK     };
+const error error::inprogress     = { etype::os, WSAEINPROGRESS     };
+const error error::already        = { etype::os, WSAEALREADY        };
+const error error::notsock        = { etype::os, WSAENOTSOCK        };
+const error error::destaddrreq    = { etype::os, WSAEDESTADDRREQ    };
+const error error::msgsize        = { etype::os, WSAEMSGSIZE        };
+const error error::prototype      = { etype::os, WSAEPROTOTYPE      };
+const error error::noprotoopt     = { etype::os, WSAENOPROTOOPT     };
+const error error::protonosupport = { etype::os, WSAEPROTONOSUPPORT };
+const error error::opnotsupp      = { etype::os, WSAEOPNOTSUPP      };
+const error error::afnosupport    = { etype::os, WSAEAFNOSUPPORT    };
+const error error::addrinuse      = { etype::os, WSAEADDRINUSE      };
+const error error::addrnotavail   = { etype::os, WSAEADDRNOTAVAIL   };
+const error error::netdown        = { etype::os, WSAENETDOWN        };
+const error error::netunreach     = { etype::os, WSAENETUNREACH     };
+const error error::netreset       = { etype::os, WSAENETRESET       };
+const error error::connaborted    = { etype::os, WSAECONNABORTED    };
+const error error::connreset      = { etype::os, WSAECONNRESET      };
+const error error::nobufs         = { etype::os, WSAENOBUFS         };
+const error error::isconn         = { etype::os, WSAEISCONN         };
+const error error::notconn        = { etype::os, WSAENOTCONN        };
+const error error::timedout       = { etype::os, WSAETIMEDOUT       };
+const error error::connrefused    = { etype::os, WSAECONNREFUSED    };
+const error error::loop           = { etype::os, WSAELOOP           };
+const error error::nametoolong    = { etype::os, WSAENAMETOOLONG    };
+const error error::hostunreach    = { etype::os, WSAEHOSTUNREACH    };
+const error error::host_not_found = { etype::netdb, WSAHOST_NOT_FOUND };
+const error error::try_again      = { etype::netdb, WSATRY_AGAIN      };
+const error error::no_recovery    = { etype::netdb, WSANO_RECOVERY    };
+#else
+const error error::perm           = { etype::os, EPERM           };
+const error error::noent          = { etype::os, ENOENT          };
+const error error::intr           = { etype::os, EINTR           };
+const error error::io             = { etype::os, EIO             };
+const error error::badf           = { etype::os, EBADF           };
+const error error::nomem          = { etype::os, ENOMEM          };
+const error error::acces          = { etype::os, EACCES          };
+const error error::fault          = { etype::os, EFAULT          };
+const error error::notdir         = { etype::os, ENOTDIR         };
+const error error::isdir          = { etype::os, EISDIR          };
+const error error::inval          = { etype::os, EINVAL          };
+const error error::nfile          = { etype::os, ENFILE          };
+const error error::mfile          = { etype::os, EMFILE          };
+const error error::notty          = { etype::os, ENOTTY          };
+const error error::fbig           = { etype::os, EFBIG           };
+const error error::nospc          = { etype::os, ENOSPC          };
+const error error::rofs           = { etype::os, EROFS           };
+const error error::pipe           = { etype::os, EPIPE           };
+const error error::again          = { etype::os, EAGAIN          };
+const error error::wouldblock     = { etype::os, EWOULDBLOCK     };
+const error error::inprogress     = { etype::os, EINPROGRESS     };
+const error error::already        = { etype::os, EALREADY        };
+const error error::notsock        = { etype::os, ENOTSOCK        };
+const error error::destaddrreq    = { etype::os, EDESTADDRREQ    };
+const error error::msgsize        = { etype::os, EMSGSIZE        };
+const error error::prototype      = { etype::os, EPROTOTYPE      };
+const error error::noprotoopt     = { etype::os, ENOPROTOOPT     };
+const error error::protonosupport = { etype::os, EPROTONOSUPPORT };
+const error error::opnotsupp      = { etype::os, EOPNOTSUPP      };
+const error error::afnosupport    = { etype::os, EAFNOSUPPORT    };
+const error error::addrinuse      = { etype::os, EADDRINUSE      };
+const error error::addrnotavail   = { etype::os, EADDRNOTAVAIL   };
+const error error::netdown        = { etype::os, ENETDOWN        };
+const error error::netunreach     = { etype::os, ENETUNREACH     };
+const error error::netreset       = { etype::os, ENETRESET       };
+const error error::connaborted    = { etype::os, ECONNABORTED    };
+const error error::connreset      = { etype::os, ECONNRESET      };
+const error error::nobufs         = { etype::os, ENOBUFS         };
+const error error::isconn         = { etype::os, EISCONN         };
+const error error::notconn        = { etype::os, ENOTCONN        };
+const error error::timedout       = { etype::os, ETIMEDOUT       };
+const error error::connrefused    = { etype::os, ECONNREFUSED    };
+const error error::loop           = { etype::os, ELOOP           };
+const error error::nametoolong    = { etype::os, ENAMETOOLONG    };
+const error error::hostunreach    = { etype::os, EHOSTUNREACH    };
+const error error::proto          = { etype::os, EPROTO          };
+const error error::host_not_found = { etype::netdb, EAI_NONAME };
+const error error::try_again      = { etype::netdb, EAI_AGAIN  };
+const error error::no_recovery    = { etype::netdb, EAI_FAIL   };
+const error error::no_data        = { etype::netdb, EAI_NODATA };
+#endif // defined(_WIN32) || defined(_WIN64)
+
+static const std::map<const error, const char*> emessages {
     { error::unknown,          "Unknown error" },
     { error::nil,              "No error" },
     { error::eof,              "End of file" },
     { error::illegal_argument, "Illegal argument" },
     { error::illegal_state,    "Illegal state" },
-    { error::not_found,        "Not found" },
+    { error::not_found,        "Element not found" },
     { error::perm,             "Operation not permitted" },
     { error::noent,            "No such file or directory" },
     { error::intr,             "Interrupted system call" },
@@ -69,110 +165,30 @@ static const std::map<error, const char*> errorMessages {
     { error::no_data,          "The requested name is valid but does not have an IP address" },
 };
 
-#if defined(_WIN32) || defined(_WIN64)
-static const std::map<int, error> osErrors {
-    { WSAEINTR,           error::intr },
-    { WSAEBADF,           error::badf },
-    { WSAEACCES,          error::acces },
-    { WSAEFAULT,          error::fault },
-    { WSAEINVAL,          error::inval },
-    { WSAEMFILE,          error::mfile },
-    { WSAEWOULDBLOCK,     error::wouldblock },
-    { WSAEINPROGRESS,     error::inprogress },
-    { WSAEALREADY,        error::already },
-    { WSAENOTSOCK,        error::notsock },
-    { WSAEDESTADDRREQ,    error::destaddrreq },
-    { WSAEMSGSIZE,        error::msgsize },
-    { WSAEPROTOTYPE,      error::prototype },
-    { WSAENOPROTOOPT,     error::noprotoopt },
-    { WSAEPROTONOSUPPORT, error::protonosupport },
-    { WSAEOPNOTSUPP,      error::opnotsupp },
-    { WSAEAFNOSUPPORT,    error::afnosupport },
-    { WSAEADDRINUSE,      error::addrinuse },
-    { WSAEADDRNOTAVAIL,   error::addrnotavail },
-    { WSAENETDOWN,        error::netdown },
-    { WSAENETUNREACH,     error::netunreach },
-    { WSAENETRESET,       error::netreset },
-    { WSAECONNABORTED,    error::connaborted },
-    { WSAECONNRESET,      error::connreset },
-    { WSAENOBUFS,         error::nobufs },
-    { WSAEISCONN,         error::isconn },
-    { WSAENOTCONN,        error::notconn },
-    { WSAETIMEDOUT,       error::timedout },
-    { WSAECONNREFUSED,    error::connrefused },
-    { WSAELOOP,           error::loop },
-    { WSAENAMETOOLONG,    error::nametoolong },
-    { WSAEHOSTUNREACH,    error::hostunreach },
-    { WSAHOST_NOT_FOUND,  error::host_not_found },
-    { WSATRY_AGAIN,       error::try_again },
-    { WSANO_RECOVERY,     error::no_recovery },
-};
-#else
-static const std::map<int, error> osErrors {
-    { EPERM,           error::perm },
-    { ENOENT,          error::noent },
-    { EINTR,           error::intr },
-    { EIO,             error::io },
-    { EBADF,           error::badf },
-    { ENOMEM,          error::nomem },
-    { EACCES,          error::acces },
-    { EFAULT,          error::fault },
-    { ENOTDIR,         error::notdir },
-    { EISDIR,          error::isdir },
-    { EINVAL,          error::inval },
-    { ENFILE,          error::nfile },
-    { EMFILE,          error::mfile },
-    { ENOTTY,          error::notty },
-    { EFBIG,           error::fbig },
-    { ENOSPC,          error::nospc },
-    { EROFS,           error::rofs },
-    { EPIPE,           error::pipe },
-    { EAGAIN,          error::again },
-    { EWOULDBLOCK,     error::wouldblock },
-    { EINPROGRESS,     error::inprogress },
-    { EALREADY,        error::already },
-    { ENOTSOCK,        error::notsock },
-    { EDESTADDRREQ,    error::destaddrreq },
-    { EMSGSIZE,        error::msgsize },
-    { EPROTOTYPE,      error::prototype },
-    { ENOPROTOOPT,     error::noprotoopt },
-    { EPROTONOSUPPORT, error::protonosupport },
-    { EOPNOTSUPP,      error::opnotsupp },
-    { EAFNOSUPPORT,    error::afnosupport },
-    { EADDRINUSE,      error::addrinuse },
-    { EADDRNOTAVAIL,   error::addrnotavail },
-    { ENETDOWN,        error::netdown },
-    { ENETUNREACH,     error::netunreach },
-    { ENETRESET,       error::netreset },
-    { ECONNABORTED,    error::connaborted },
-    { ECONNRESET,      error::connreset },
-    { ENOBUFS,         error::nobufs },
-    { EISCONN,         error::isconn },
-    { ENOTCONN,        error::notconn },
-    { ETIMEDOUT,       error::timedout },
-    { ECONNREFUSED,    error::connrefused },
-    { ELOOP,           error::loop },
-    { ENAMETOOLONG,    error::nametoolong },
-    { EHOSTUNREACH,    error::hostunreach },
-    { EPROTO,          error::proto },
-    { EAI_NONAME,      error::host_not_found },
-    { EAI_AGAIN,       error::try_again },
-    { EAI_FAIL,        error::no_recovery },
-    { EAI_NODATA,      error::no_data },
-};
-#endif // defined(_WIN32) || defined(_WIN64)
-
-const char* ErrorMessage(const error& err) {
-    auto it = errorMessages.find(err);
-    return it != errorMessages.end() ? it->second : "";
+const char* error::Message(const error& err) {
+    auto it = emessages.find(err);
+    if (it != emessages.end()) {
+        return it->second;
+    }
+    switch (err.type) {
+        case etype::base:
+            return "base error";
+        case etype::os:
+            return "os error";
+        case etype::netdb:
+            return "netdb error";
+        case etype::ssl:
+            return "ssl error";
+        default:
+            return "";
+    }
 }
 
-error toError(const int& osErrno) {
-    if (osErrno == 0) {
+error error::wrap(const etype& type, const int& err) {
+    if (err == 0) {
         return error::nil;
     }
-    auto it = osErrors.find(osErrno);
-    return it != osErrors.end() ? it->second : error::unknown;
+    return { type, err };
 }
 
 } // namespace net

@@ -32,7 +32,7 @@ static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefd
 
     int result = select(0, readfds, writefds, nullptr, &timeout);
     if (result == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     } else if (result == 0) {
         return error::timedout;
     } else {
@@ -40,7 +40,7 @@ static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefd
         int optlen = sizeof(soErr);
         getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*) &soErr, &optlen);
         if (soErr != 0) {
-            return toError(soErr);
+            return error::wrap(etype::os, soErr);
         }
         return error::nil;
     }
@@ -63,7 +63,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
 
     struct sockaddr_in serverAddr;
@@ -76,7 +76,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
             int err = WSAGetLastError();
             closesocket(fd);
-            return toError(err);
+            return error::wrap(etype::os, err);
         }
         *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
         return error::nil;
@@ -86,7 +86,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
             int err = WSAGetLastError();
             if (err != WSAEWOULDBLOCK) {
                 closesocket(fd);
-                return toError(err);
+                return error::wrap(etype::os, err);
             }
         }
         fd_set writefds;
@@ -112,7 +112,7 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == INVALID_SOCKET) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
 
     BOOL enabled = 1;
@@ -140,7 +140,7 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 fail:
     int err = WSAGetLastError();
     closesocket(fd);
-    return toError(err);
+    return error::wrap(etype::os, err);
 }
 
 TCPSocket::~TCPSocket() {
@@ -153,7 +153,7 @@ error TCPSocket::Close() {
     }
 
     if (closesocket(m_fd) == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     m_closed = true;
     return error::nil;
@@ -162,7 +162,7 @@ error TCPSocket::Close() {
 static error read(const SocketFD& fd, char* buf, size_t len, int* nbytes) {
     int size = recv(fd, buf, len, 0);
     if (size == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (size == 0) {
         return error::eof;
@@ -192,7 +192,7 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
 static error write(const SocketFD& fd, const char* buf, size_t len, int* nbytes) {
     int size = send(fd, buf, len, 0);
     if (size == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (nbytes != nullptr) {
         *nbytes = size;
@@ -241,7 +241,7 @@ error TCPListener::Close() {
     }
 
     if (closesocket(m_fd) == SOCKET_ERROR) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     m_closed = true;
     return error::nil;
@@ -266,7 +266,7 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
 
     SOCKET clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
     if (clientFD == INVALID_SOCKET) {
-        return toError(WSAGetLastError());
+        return error::wrap(etype::os, WSAGetLastError());
     }
     *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
     return error::nil;
