@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
             printf("%s\n", error::Message(err));
             continue;
         }
-        printf("connected\n");
+        printf("%s connected\n", socket->RemoteAddress().c_str());
         std::thread th([=]() {
             handle(socket);
         });

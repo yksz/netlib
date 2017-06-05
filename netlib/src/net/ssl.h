@@ -32,7 +32,9 @@ public:
     /**
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetTimeout(int64_t timeoutMilliseconds);
+    error SetTimeout(int64_t timeoutMilliseconds) { return m_tcp->SetTimeout(timeoutMilliseconds); }
+    SocketFD FD() { return m_tcp->FD(); }
+    std::string RemoteAddress() { return m_tcp->RemoteAddress(); }
 
 private:
     std::shared_ptr<TCPSocket> m_tcp;
@@ -57,7 +59,8 @@ public:
     /**
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
-    error SetTimeout(int64_t timeoutMilliseconds);
+    error SetTimeout(int64_t timeoutMilliseconds) { return m_tcp->SetTimeout(timeoutMilliseconds); }
+    SocketFD FD() { return m_tcp->FD(); }
 
 private:
     std::shared_ptr<TCPListener> m_tcp;

@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
         printf("%s\n", error::Message(err));
         return 1;
     }
+    socket->SetTimeout(10000);
     for (int i = 0; i < kSendCount; i++) {
         socket->WriteFull(msg, strlen(msg));
         socket->WriteFull("\n", 1);
