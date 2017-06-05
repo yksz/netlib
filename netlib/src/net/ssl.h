@@ -29,6 +29,10 @@ public:
     error Close();
     error Read(char* buf, size_t len, int* nbytes);
     error Write(const char* buf, size_t len, int* nbytes);
+    /**
+     * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
+     */
+    error SetTimeout(int64_t timeoutMilliseconds);
 
 private:
     std::shared_ptr<TCPSocket> m_tcp;
@@ -50,6 +54,10 @@ public:
      * @param[out] clientSock
      */
     error Accept(std::shared_ptr<SSLSocket>* clientSock);
+    /**
+     * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
+     */
+    error SetTimeout(int64_t timeoutMilliseconds);
 
 private:
     std::shared_ptr<TCPListener> m_tcp;

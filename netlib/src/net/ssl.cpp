@@ -234,6 +234,10 @@ error SSLSocket::Write(const char* buf, size_t len, int* nbytes) {
     return error::nil;
 }
 
+error SSLSocket::SetTimeout(int64_t timeoutMilliseconds) {
+    return m_tcp->SetTimeout(timeoutMilliseconds);
+}
+
 SSLListener::~SSLListener() {
     Close();
 }
@@ -297,6 +301,10 @@ error SSLListener::Accept(std::shared_ptr<SSLSocket>* clientSock) {
 
     *clientSock = std::make_shared<SSLSocket>(clientTCP, ssl);
     return error::nil;
+}
+
+error SSLListener::SetTimeout(int64_t timeoutMilliseconds) {
+    return m_tcp->SetTimeout(timeoutMilliseconds);
 }
 
 } // namespace net
