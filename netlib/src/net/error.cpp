@@ -7,6 +7,7 @@
  #include <cerrno>
  #include <netdb.h>
 #endif // defined(_WIN32) || defined(_WIN64)
+#include <openssl/err.h>
 
 namespace net {
 
@@ -120,6 +121,7 @@ const error error::no_data        = { etype::netdb, EAI_NODATA };
 const error error::no_recovery    = { etype::netdb, EAI_FAIL   };
 const error error::try_again      = { etype::netdb, EAI_AGAIN  };
 #endif // defined(_WIN32) || defined(_WIN64)
+const error error::ssl_cert       = { etype::ssl, -1 };
 
 static const std::map<const error, const char*> emessages {
     { error::unknown,          "Unknown error"     },
@@ -178,9 +180,16 @@ static const std::map<const error, const char*> emessages {
     { error::no_data,          "The requested name is valid but does not have an IP address" },
     { error::no_recovery,      "A nonrecoverable name server error occurred"                 },
     { error::try_again,        "A temporary error occurred on an authoritative name server"  },
+    { error::ssl_cert,         "Certificate error" },
 };
 
 const char* error::Message(const error& err) {
+    if (err.type == etype::ssl) {
+        const char* s = ERR_reason_error_string(err.code);
+        if (s != nullptr) {
+            return s;
+        }
+    }
     auto it = emessages.find(err);
     if (it != emessages.end()) {
         return it->second;

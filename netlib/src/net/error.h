@@ -87,6 +87,9 @@ struct error {
     static const error try_again;
     static const error no_recovery;
     static const error no_data;
+
+    // OpenSSL
+    static const error ssl_cert;
 };
 
 } // namespace net

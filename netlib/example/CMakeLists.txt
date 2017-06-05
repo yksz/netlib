@@ -7,6 +7,7 @@ project_add_example(
     binary_example
     interface_example
     resolver_example
+    ssl_client_example
     tcp_client_example
     tcp_server_example
     udp_client_example

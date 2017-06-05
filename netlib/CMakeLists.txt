@@ -19,6 +19,7 @@ set(source_files
     ${PROJECT_SOURCE_DIR}/src/net/binary.cpp
     ${PROJECT_SOURCE_DIR}/src/net/interface.cpp
     ${PROJECT_SOURCE_DIR}/src/net/resolver.cpp
+    ${PROJECT_SOURCE_DIR}/src/net/ssl.cpp
     ${PROJECT_SOURCE_DIR}/src/net/stream.cpp
 )
 if(WIN32)
@@ -52,11 +53,11 @@ if(UNIX)
     set_target_properties(${PROJECT_NAME}_static PROPERTIES PREFIX "lib")
 endif()
 if(MINGW)
-    target_link_libraries(${PROJECT_NAME} ws2_32)
-    target_link_libraries(${PROJECT_NAME} iphlpapi)
-    target_link_libraries(${PROJECT_NAME}_static ws2_32)
-    target_link_libraries(${PROJECT_NAME}_static iphlpapi)
+    target_link_libraries(${PROJECT_NAME} ws2_32 iphlpapi)
+    target_link_libraries(${PROJECT_NAME}_static ws2_32 iphlpapi)
 endif()
+target_link_libraries(${PROJECT_NAME} ssl crypto)
+target_link_libraries(${PROJECT_NAME}_static ssl crypto)
 
 ### Install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
