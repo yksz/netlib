@@ -21,7 +21,11 @@ int main(int argc, char** argv) {
     std::string cert = argc > 4 ? argv[4] : "";
 
     SSLConfig config = {};
-    config.CertFile = cert;
+    if (cert.empty()) {
+        config.InsecureSkipVerify = true;
+    } else {
+        config.CertFile = cert;
+    }
     std::shared_ptr<SSLSocket> socket;
     error err = ConnectSSL(host, port, 5000, config, &socket);
     if (err != error::nil) {

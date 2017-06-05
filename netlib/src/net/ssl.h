@@ -15,6 +15,7 @@ struct SSLConfig {
     const SSL_METHOD* Method;
     std::string CertFile;
     std::string KeyFile;
+    bool InsecureSkipVerify;
 };
 
 class SSLSocket final : public ReadWriteCloser {

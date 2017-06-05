@@ -102,17 +102,19 @@ error ConnectSSL(const std::string& host, uint16_t port, int64_t timeoutMillisec
     }
 
     error err = error::nil;
-    // Step 1: verify a server certificate was presented during the negotiation
-    X509* cert = SSL_get_peer_certificate(ssl);
-    if (cert == nullptr) {
-        err = error::ssl_cert;
-        goto fail;
-    }
-    X509_free(cert);
-    // Step 2: verify the result of chain verification
-    if (SSL_get_verify_result(ssl) != X509_V_OK) {
-        err = error::ssl_cert;
-        goto fail;
+    if (!config.InsecureSkipVerify) {
+        // Step 1: verify a server certificate was presented during the negotiation
+        X509* cert = SSL_get_peer_certificate(ssl);
+        if (cert == nullptr) {
+            err = error::ssl_cert;
+            goto fail;
+        }
+        X509_free(cert);
+        // Step 2: verify the result of chain verification
+        if (SSL_get_verify_result(ssl) != X509_V_OK) {
+            err = error::ssl_cert;
+            goto fail;
+        }
     }
 
     *clientSock = std::make_shared<SSLSocket>(tcp, ssl);
