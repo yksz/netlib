@@ -36,6 +36,26 @@ private:
     std::atomic<bool> m_closed;
 };
 
+class SSLListener final : public Closer {
+public:
+    SSLListener(const std::shared_ptr<TCPListener>& tcp, SSL_CTX* ctx)
+            : m_tcp(tcp), m_ctx(ctx) {}
+    ~SSLListener();
+    SSLListener(const SSLListener&) = delete;
+    SSLListener& operator=(const SSLListener&) = delete;
+
+    bool IsClosed();
+    error Close();
+    /**
+     * @param[out] clientSock
+     */
+    error Accept(std::shared_ptr<SSLSocket>* clientSock);
+
+private:
+    std::shared_ptr<TCPListener> m_tcp;
+    SSL_CTX* m_ctx;
+};
+
 /**
  * @param[in] host A hostname or IPv4
  * @param[in] port
@@ -46,5 +66,14 @@ private:
 error ConnectSSL(const std::string& host, uint16_t port, int64_t timeoutMilliseconds,
         const SSLConfig& config,
         std::shared_ptr<SSLSocket>* clientSock);
+
+/**
+ * @param[in] port
+ * @param[in] config
+ * @param[out] serverSock
+ */
+error ListenSSL(uint16_t port,
+        const SSLConfig& config,
+        std::shared_ptr<SSLListener>* serverSock);
 
 } // namespace net
