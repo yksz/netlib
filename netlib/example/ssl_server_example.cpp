@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
     SSLConfig config = {};
     config.CertFile = cert;
     config.KeyFile = key;
+
     std::shared_ptr<SSLListener> listener;
     error err = ListenSSL(kPort, config, &listener);
     if (err != error::nil) {

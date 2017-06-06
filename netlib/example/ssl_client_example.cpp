@@ -9,6 +9,8 @@
 using namespace net;
 
 static const int kSendCount = 3;
+static const int kConnTimeout =  5000; // ms
+static const int kSockTimeout = 10000; // ms
 
 int main(int argc, char** argv) {
     if (argc <= 3) {
@@ -26,13 +28,14 @@ int main(int argc, char** argv) {
     } else {
         config.CertFile = cert;
     }
+
     std::shared_ptr<SSLSocket> socket;
-    error err = ConnectSSL(host, port, 5000, config, &socket);
+    error err = ConnectSSL(host, port, kConnTimeout, config, &socket);
     if (err != error::nil) {
         printf("%s\n", error::Message(err));
         return 1;
     }
-    socket->SetTimeout(10000);
+    socket->SetTimeout(kSockTimeout);
     for (int i = 0; i < kSendCount; i++) {
         socket->WriteFull(msg, strlen(msg));
         socket->WriteFull("\n", 1);

@@ -9,6 +9,7 @@
 using namespace net;
 
 static const int kSendCount = 3;
+static const int kSockTimeout = 10000; // ms
 
 int main(int argc, char** argv) {
     if (argc <= 3) {
@@ -25,7 +26,7 @@ int main(int argc, char** argv) {
         printf("%s\n", error::Message(err));
         return 1;
     }
-    socket->SetTimeout(10000);
+    socket->SetTimeout(kSockTimeout);
     for (int i = 0; i < kSendCount; i++) {
         int nbytes;
         socket->Write(msg, strlen(msg), &nbytes);

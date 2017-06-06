@@ -7,7 +7,7 @@
 using namespace net;
 
 static const int kPort = 443;
-static const int kConnTimeout = 5000; // ms
+static const int kConnTimeout =  5000; // ms
 static const int kSockTimeout = 10000; // ms
 
 int main(int argc, char** argv) {
