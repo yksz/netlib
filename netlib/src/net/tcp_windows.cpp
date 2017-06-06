@@ -252,6 +252,10 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
         assert(0 && "clientSock must not be nullptr");
         return error::illegal_argument;
     }
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
 
     if (m_timeoutMilliseconds > 0) {
         fd_set readfds;
