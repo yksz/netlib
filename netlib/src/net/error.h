@@ -27,8 +27,8 @@ struct error {
     static error wrap(const etype& type, const int& err);
 
 
-    static const error unknown;
     static const error nil; // success
+    static const error unknown;
     static const error eof;
     static const error illegal_argument;
     static const error illegal_state;

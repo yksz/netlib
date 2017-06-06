@@ -7,17 +7,18 @@
  #include <cerrno>
  #include <netdb.h>
 #endif // defined(_WIN32) || defined(_WIN64)
+#ifdef NET_USE_OPENSSL
 #include <openssl/err.h>
+#endif // NET_USE_OPENSSL
 
 namespace net {
 
-const error error::unknown          = { etype::base, 0 };
-const error error::nil              = { etype::base, 1 };
+const error error::nil              = { etype::base, 0 };
+const error error::unknown          = { etype::base, 1 };
 const error error::eof              = { etype::base, 2 };
 const error error::illegal_argument = { etype::base, 3 };
 const error error::illegal_state    = { etype::base, 4 };
 const error error::not_found        = { etype::base, 5 };
-
 #if defined(_WIN32) || defined(_WIN64)
 const error error::perm           = { etype::os, ERROR_ACCESS_DENIED };
 const error error::noent          = { etype::os, ENOENT              };
@@ -121,7 +122,7 @@ const error error::no_data        = { etype::netdb, EAI_NODATA };
 const error error::no_recovery    = { etype::netdb, EAI_FAIL   };
 const error error::try_again      = { etype::netdb, EAI_AGAIN  };
 #endif // defined(_WIN32) || defined(_WIN64)
-const error error::ssl_cert       = { etype::ssl, -1 };
+const error error::ssl_cert = { etype::ssl, -1 };
 
 static const std::map<const error, const char*> emessages {
     { error::unknown,          "Unknown error"     },
@@ -184,12 +185,14 @@ static const std::map<const error, const char*> emessages {
 };
 
 const char* error::Message(const error& err) {
+#ifdef NET_USE_OPENSSL
     if (err.type == etype::ssl) {
         const char* s = ERR_reason_error_string(err.code);
         if (s != nullptr) {
             return s;
         }
     }
+#endif // NET_USE_OPENSSL
     auto it = emessages.find(err);
     if (it != emessages.end()) {
         return it->second;

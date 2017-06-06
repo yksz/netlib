@@ -2,7 +2,7 @@
 
 DIRNAME="eclipse"
 
-cd `dirname "${0}"`
+cd `dirname "$0"`
 if [ ! -e ${DIRNAME} ] ; then
     mkdir ${DIRNAME}
 fi
@@ -15,6 +15,7 @@ cmake -G "Eclipse CDT4 - Unix Makefiles" \
     -DCMAKE_CXX_COMPILER_ARG1=-std=c++11 \
     -Dbuild_tests=ON \
     -Dbuild_examples=ON \
+    $@ \
     ../netlib
 
 # On Eclipse: Import > General > Existing Projects into Workspace
