@@ -8,7 +8,7 @@ int main(void) {
     char buf[33];
 
     // write
-    ByteBuffer w(buf, sizeof(buf), ByteOrder::kBigEndian);
+    ByteBuffer w(buf, sizeof(buf), ByteOrder::BigEndian);
     const char str1[] = "abcd";
     w.Put(str1, sizeof(str1));
     w.PutBool(true);
@@ -20,7 +20,7 @@ int main(void) {
     w.PutDouble(6.0);
 
     // read
-    ByteBuffer r(buf, sizeof(buf), ByteOrder::kBigEndian);
+    ByteBuffer r(buf, sizeof(buf), ByteOrder::BigEndian);
     char str2[5] = {0};
     r.Get(str2, sizeof(str2));
     printf("%s\n", str2);
