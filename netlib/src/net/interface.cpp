@@ -15,7 +15,7 @@ error GetNetworkInterfaceByIndex(int index, NetworkInterface* inf) {
         return err;
     }
     for (auto& i : infs) {
-        if (i.index == index) {
+        if (i.Index == index) {
             *inf = i;
             return error::nil;
         }
@@ -35,7 +35,7 @@ error GetNetworkInterfaceByName(const std::string& name, NetworkInterface* inf) 
         return err;
     }
     for (auto& i : infs) {
-        if (i.name == name) {
+        if (i.Name == name) {
             *inf = i;
             return error::nil;
         }

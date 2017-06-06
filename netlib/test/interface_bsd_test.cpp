@@ -12,9 +12,9 @@ TEST(GetNetworkInterfaceByName, LoopbackAddress) {
     error err = GetNetworkInterfaceByName(name, &inf);
 
     EXPECT_EQ(error::nil, err);
-    EXPECT_EQ(name, inf.name);
+    EXPECT_EQ(name, inf.Name);
     std::array<uint8_t, 6> macAddr{0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    EXPECT_EQ(macAddr, inf.hardwareAddress);
-    EXPECT_EQ(true, inf.isUp);
-    EXPECT_EQ(true, inf.isLoopback);
+    EXPECT_EQ(macAddr, inf.HardwareAddress);
+    EXPECT_EQ(true, inf.IsUp);
+    EXPECT_EQ(true, inf.IsLoopback);
 }

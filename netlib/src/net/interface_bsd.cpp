@@ -23,23 +23,23 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
             continue;
         }
         NetworkInterface inf = {0};
-        inf.index = if_nametoindex(ifa->ifa_name);
-        inf.name = ifa->ifa_name;
+        inf.Index = if_nametoindex(ifa->ifa_name);
+        inf.Name = ifa->ifa_name;
         struct sockaddr_dl* sdl = (struct sockaddr_dl*) ifa->ifa_addr;
         switch (sdl->sdl_type) {
             case IFT_ETHER:
             {
                 uint8_t* macAddr = (uint8_t*) LLADDR(sdl);
-                for (int i = 0; i < inf.hardwareAddress.size(); i++) {
-                    inf.hardwareAddress[i] = macAddr[i];
+                for (int i = 0; i < inf.HardwareAddress.size(); i++) {
+                    inf.HardwareAddress[i] = macAddr[i];
                 }
                 break;
             }
             case IFT_LOOP:
-                inf.isLoopback = true;
+                inf.IsLoopback = true;
                 break;
         }
-        inf.isUp = ifa->ifa_flags & IFF_UP;
+        inf.IsUp = ifa->ifa_flags & IFF_UP;
         infs->push_back(inf);
     }
     freeifaddrs(ifaddrs);

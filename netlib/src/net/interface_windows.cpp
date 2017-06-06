@@ -36,17 +36,17 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
 
     for (auto pAddr = pAddrs; pAddr != nullptr; pAddr = pAddr->Next) {
         NetworkInterface inf = {0};
-        inf.index = pAddr->IfIndex;
+        inf.Index = pAddr->IfIndex;
         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
-        inf.name = converter.to_bytes(pAddr->FriendlyName);
+        inf.Name = converter.to_bytes(pAddr->FriendlyName);
         for (size_t i = 0; i < pAddr->PhysicalAddressLength; i++) {
-            inf.hardwareAddress[i] = pAddr->PhysicalAddress[i];
+            inf.HardwareAddress[i] = pAddr->PhysicalAddress[i];
         }
         if (pAddr->OperStatus == IfOperStatusUp) {
-            inf.isUp = true;
+            inf.IsUp = true;
         }
         if (pAddr->IfType == IF_TYPE_SOFTWARE_LOOPBACK) {
-            inf.isLoopback = true;
+            inf.IsLoopback = true;
         }
         infs->push_back(std::move(inf));
     }

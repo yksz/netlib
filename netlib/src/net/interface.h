@@ -9,11 +9,11 @@
 namespace net {
 
 struct NetworkInterface {
-    int index;
-    std::string name;
-    std::array<uint8_t, 6> hardwareAddress;
-    bool isUp;
-    bool isLoopback;
+    int Index;
+    std::string Name;
+    std::array<uint8_t, 6> HardwareAddress;
+    bool IsUp;
+    bool IsLoopback;
 };
 
 /**

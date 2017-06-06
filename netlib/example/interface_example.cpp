@@ -14,11 +14,11 @@ static std::string formatMACAddr(std::array<unsigned char, 6> addr, char delim) 
 
 static void printNetworkInterface(const NetworkInterface& inf) {
     printf("\n");
-    printf("Index          : %d\n", inf.index);
-    printf("Name           : %s\n", inf.name.c_str());
-    printf("HardwareAddress: %s\n", formatMACAddr(inf.hardwareAddress, ':').c_str());
-    printf("Up             : %s\n", inf.isUp ? "true" : "false");
-    printf("Loopback       : %s\n", inf.isLoopback ? "true" : "false");
+    printf("Index          : %d\n", inf.Index);
+    printf("Name           : %s\n", inf.Name.c_str());
+    printf("HardwareAddress: %s\n", formatMACAddr(inf.HardwareAddress, ':').c_str());
+    printf("Up             : %s\n", inf.IsUp ? "true" : "false");
+    printf("Loopback       : %s\n", inf.IsLoopback ? "true" : "false");
 }
 
 int main(int argc, char** argv) {

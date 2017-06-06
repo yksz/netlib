@@ -80,19 +80,19 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     struct ifreq* end = it + (ifc.ifc_len / sizeof(struct ifreq));
     for (; it != end; it++) {
         NetworkInterface inf = {0};
-        err = getIndex(fd, it, &inf.index);
+        err = getIndex(fd, it, &inf.Index);
         if (err != error::nil) {
             goto fail;
         }
-        err = getName(fd, it, &inf.name);
+        err = getName(fd, it, &inf.Name);
         if (err != error::nil) {
             goto fail;
         }
-        err = getHardwareAddress(fd, it, &inf.hardwareAddress);
+        err = getHardwareAddress(fd, it, &inf.HardwareAddress);
         if (err != error::nil) {
             goto fail;
         }
-        err = getFlags(fd, it, &inf.isUp, &inf.isLoopback);
+        err = getFlags(fd, it, &inf.IsUp, &inf.IsLoopback);
         if (err != error::nil) {
             goto fail;
         }
