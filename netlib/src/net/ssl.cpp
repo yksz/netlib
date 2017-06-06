@@ -121,9 +121,9 @@ error ConnectSSL(const std::string& host, uint16_t port, int64_t timeoutMillisec
     goto exit;
 
 fail:
-    SSL_CTX_free(ctx);
     SSL_free(ssl);
 exit:
+    SSL_CTX_free(ctx);
     return err;
 }
 
