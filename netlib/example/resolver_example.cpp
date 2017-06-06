@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
         err = LookupAddress(host, &addr);
     }
     if (err != error::nil) {
-        std::cout << host << ": " << ErrorMessage(err) << std::endl;
+        std::cout << host << ": " << error::Message(err) << std::endl;
         return 1;
     }
     std::cout << host << ": " << addr << std::endl;

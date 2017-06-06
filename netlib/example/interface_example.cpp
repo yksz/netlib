@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     std::vector<NetworkInterface> infs;
     error err = GetNetworkInterfaces(&infs);
     if (err != error::nil) {
-        printf("%s\n", ErrorMessage(err));
+        printf("%s\n", error::Message(err));
         return 1;
     }
     for (auto& i : infs) {

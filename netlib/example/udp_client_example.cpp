@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     std::shared_ptr<UDPSocket> socket;
     error err = ConnectUDP(host, port, &socket);
     if (err != error::nil) {
-        printf("%s\n", ErrorMessage(err));
+        printf("%s\n", error::Message(err));
         return 1;
     }
     socket->SetTimeout(10000);

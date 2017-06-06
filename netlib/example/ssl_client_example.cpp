@@ -4,7 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-#include "net/tcp.h"
+#include "net/ssl.h"
 
 using namespace net;
 
@@ -12,15 +12,22 @@ static const int kSendCount = 3;
 
 int main(int argc, char** argv) {
     if (argc <= 3) {
-        printf("usage: %s <host> <port> <message>\n", argv[0]);
+        printf("usage: %s <host> <port> <message> [certfile]\n", argv[0]);
         exit(1);
     }
     char* host = argv[1];
     int port = atoi(argv[2]);
     char* msg = argv[3];
+    std::string cert = argc > 4 ? argv[4] : "";
 
-    std::shared_ptr<TCPSocket> socket;
-    error err = ConnectTCP(host, port, 5000, &socket);
+    SSLConfig config = {};
+    if (cert.empty()) {
+        config.InsecureSkipVerify = true;
+    } else {
+        config.CertFile = cert;
+    }
+    std::shared_ptr<SSLSocket> socket;
+    error err = ConnectSSL(host, port, 5000, config, &socket);
     if (err != error::nil) {
         printf("%s\n", error::Message(err));
         return 1;

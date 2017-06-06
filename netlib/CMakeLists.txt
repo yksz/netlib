@@ -5,8 +5,10 @@ set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
-option(build_tests "Build all of own tests." OFF)
-option(build_examples "Build example programs." OFF)
+option(NET_USE_OPENSSL "Include SSL/TLS support" OFF)
+
+option(build_tests "Build all of own tests" OFF)
+option(build_examples "Build example programs" OFF)
 
 include(cmake/project.cmake)
 
@@ -44,6 +46,11 @@ else() # UNIX
         )
     endif()
 endif()
+if(NET_USE_OPENSSL)
+    set(source_files ${source_files}
+        ${PROJECT_SOURCE_DIR}/src/net/ssl.cpp
+    )
+endif()
 # shared and static libraries
 add_library(${PROJECT_NAME} SHARED ${source_files})
 add_library(${PROJECT_NAME}_static STATIC ${source_files})
@@ -52,10 +59,12 @@ if(UNIX)
     set_target_properties(${PROJECT_NAME}_static PROPERTIES PREFIX "lib")
 endif()
 if(MINGW)
-    target_link_libraries(${PROJECT_NAME} ws2_32)
-    target_link_libraries(${PROJECT_NAME} iphlpapi)
-    target_link_libraries(${PROJECT_NAME}_static ws2_32)
-    target_link_libraries(${PROJECT_NAME}_static iphlpapi)
+    target_link_libraries(${PROJECT_NAME} ws2_32 iphlpapi)
+    target_link_libraries(${PROJECT_NAME}_static ws2_32 iphlpapi)
+endif()
+if(NET_USE_OPENSSL)
+    target_link_libraries(${PROJECT_NAME} ssl crypto)
+    target_link_libraries(${PROJECT_NAME}_static ssl crypto)
 endif()
 
 ### Install

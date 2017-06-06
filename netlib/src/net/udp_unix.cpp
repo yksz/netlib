@@ -25,7 +25,7 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
 
     if (clientSock != nullptr) {
@@ -44,7 +44,7 @@ error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
 
     int fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
 
     struct sockaddr_in serverAddr = {0};
@@ -55,7 +55,7 @@ error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
         int err = errno;
         close(fd);
-        return toError(err);
+        return error::wrap(etype::os, err);
     }
 
     *serverSock = std::make_shared<UDPSocket>(fd);
@@ -72,7 +72,7 @@ error UDPSocket::Close() {
     }
 
     if (close(m_fd) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     m_closed = true;
     return error::nil;
@@ -86,7 +86,7 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     int size = recv(m_fd, buf, len, 0);
     if (size == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     if (size == 0) {
         return error::eof;
@@ -108,7 +108,7 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
     socklen_t fromlen = sizeof(from);
     int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr *) &from, &fromlen);
     if (size == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     *addr = inet_ntoa(from.sin_addr);
     *port = ntohs(from.sin_port);
@@ -146,7 +146,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_port = htons(port);
     int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
     if (size == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     if (nbytes != nullptr) {
         *nbytes = size;
@@ -166,10 +166,10 @@ error UDPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     soTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
 
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     return error::nil;
 }

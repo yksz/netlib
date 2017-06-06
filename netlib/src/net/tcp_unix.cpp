@@ -39,7 +39,7 @@ static error waitUntilReady(const int& fd, fd_set* readfds, fd_set* writefds,
 
     int result = select(fd + 1, readfds, writefds, nullptr, &timeout);
     if (result == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     } else if (result == 0) {
         return error::timedout;
     } else {
@@ -47,7 +47,7 @@ static error waitUntilReady(const int& fd, fd_set* readfds, fd_set* writefds,
         socklen_t optlen = sizeof(soErr);
         getsockopt(fd, SOL_SOCKET, SO_ERROR, &soErr, &optlen);
         if (soErr != 0) {
-            return toError(soErr);
+            return error::wrap(etype::os, soErr);
         }
         return error::nil;
     }
@@ -70,7 +70,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
 
     struct sockaddr_in serverAddr;
@@ -83,7 +83,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
             int err = errno;
             close(fd);
-            return toError(err);
+            return error::wrap(etype::os, err);
         }
         *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
         return error::nil;
@@ -93,7 +93,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
             int err = errno;
             if (err != EINPROGRESS) {
                 close(fd);
-                return toError(err);
+                return error::wrap(etype::os, err);
             }
         }
         fd_set writefds;
@@ -119,7 +119,7 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
     if (fd == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
 
     int enabled = 1;
@@ -147,7 +147,7 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 fail:
     int err = errno;
     close(fd);
-    return toError(err);
+    return error::wrap(etype::os, err);
 }
 
 TCPSocket::~TCPSocket() {
@@ -160,7 +160,7 @@ error TCPSocket::Close() {
     }
 
     if (close(m_fd) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     m_closed = true;
     return error::nil;
@@ -174,7 +174,7 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     int size = recv(m_fd, buf, len, 0);
     if (size == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     if (size == 0) {
         return error::eof;
@@ -193,7 +193,7 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
 
     int size = send(m_fd, buf, len, 0);
     if (size == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     if (nbytes != nullptr) {
         *nbytes = size;
@@ -210,10 +210,10 @@ error TCPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     struct timeval soTimeout;
     toTimeval(timeoutMilliseconds, &soTimeout);
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     m_timeoutMilliseconds = timeoutMilliseconds;
     return error::nil;
@@ -229,7 +229,7 @@ error TCPListener::Close() {
     }
 
     if (close(m_fd) == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     m_closed = true;
     return error::nil;
@@ -254,7 +254,7 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
 
     int clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
     if (clientFD == -1) {
-        return toError(errno);
+        return error::wrap(etype::os, errno);
     }
     *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
     return error::nil;
