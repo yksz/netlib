@@ -41,8 +41,9 @@ error Reader::ReadLine(char* buf, size_t len) {
             return error::nil;
         }
         offset += nbytes;
-        if (offset + 1 >= len) {
-            return error::nil; // buf is full
+        if (offset + 1 >= len) { // buf is full
+            buf[offset] = '\0';
+            return error::nil;
         }
     }
 }

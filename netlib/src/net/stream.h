@@ -19,6 +19,15 @@ struct Reader {
      */
     virtual error Read(char* buf, size_t len, int* nbytes) = 0;
     error ReadFull(char* buf, size_t len);
+    /**
+     * Read a single line including the line end ('\n').
+     * Read a len-1 bytes if the line end is not found,
+     * and a null-character ('\0') is implicity appended
+     * at the end of buf.
+     *
+     * @param[in] buf
+     * @param[in] len
+     */
     error ReadLine(char* buf, size_t len);
 };
 
