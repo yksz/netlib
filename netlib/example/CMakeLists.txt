@@ -5,6 +5,7 @@ endif()
 
 project_add_example(
     binary_example
+    https_client_example
     interface_example
     resolver_example
     ssl_client_example
