@@ -1,0 +1,27 @@
+sudo: required
+
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7"; fi
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.7
+    packages:
+      - gcc-4.9
+      - g++-4.9
+      - clang-3.7
+
+script:
+  - ./eclipse.sh
+  - cd eclipse
+  - make
+  - make test
