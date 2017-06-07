@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/yksz/netlib.svg?branch=master)](https://travis-ci.org/yksz/netlib)
+
 # What is this?
 This is a cross platform network library for C++11.
 
@@ -14,9 +16,11 @@ cd build
 make
 sudo make install
 ```
+NOTE: Run "./build.sh -DNET_USE_OPENSSL" if use SSL/TLS.
+
 or
 
-Copy files in src directory to your project
+Copy files in src directory to your project.
 
 # Platform
 - Windows
