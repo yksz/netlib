@@ -39,7 +39,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         inf.Index = pAddr->IfIndex;
         std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
         inf.Name = converter.to_bytes(pAddr->FriendlyName);
-        for (size_t i = 0; i < pAddr->PhysicalAddressLength; i++) {
+        for (size_t i = 0; i < inf.HardwareAddress.size(); i++) {
             inf.HardwareAddress[i] = pAddr->PhysicalAddress[i];
         }
         if (pAddr->OperStatus == IfOperStatusUp) {

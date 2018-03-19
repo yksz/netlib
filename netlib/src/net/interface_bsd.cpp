@@ -30,7 +30,7 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
             case IFT_ETHER:
             {
                 uint8_t* macAddr = (uint8_t*) LLADDR(sdl);
-                for (int i = 0; i < inf.HardwareAddress.size(); i++) {
+                for (size_t i = 0; i < inf.HardwareAddress.size(); i++) {
                     inf.HardwareAddress[i] = macAddr[i];
                 }
                 break;
