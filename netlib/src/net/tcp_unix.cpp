@@ -22,7 +22,8 @@ static void toTimeval(int64_t milliseconds, struct timeval* dest) {
     dest->tv_usec = milliseconds % 1000 * 1000;
 }
 
-static error waitUntilReady(const int& fd, fd_set* readfds, fd_set* writefds,
+static error waitUntilReady(const int& fd,
+        fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
         int64_t timeoutMilliseconds) {
     if (readfds != nullptr) {
         FD_ZERO(readfds);
@@ -32,11 +33,14 @@ static error waitUntilReady(const int& fd, fd_set* readfds, fd_set* writefds,
         FD_ZERO(writefds);
         FD_SET(fd, writefds);
     }
-
+    if (exceptfds != nullptr) {
+        FD_ZERO(exceptfds);
+        FD_SET(fd, exceptfds);
+    }
     struct timeval timeout;
     toTimeval(timeoutMilliseconds, &timeout);
 
-    int result = select(fd + 1, readfds, writefds, nullptr, &timeout);
+    int result = select(fd + 1, readfds, writefds, exceptfds, &timeout);
     if (result == -1) {
         return error::wrap(etype::os, errno);
     } else if (result == 0) {
@@ -93,7 +97,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
             }
         }
         fd_set writefds;
-        error err = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
+        error err = waitUntilReady(fd, nullptr, &writefds, nullptr, timeoutMilliseconds);
         if (err != error::nil) {
             close(fd);
             return err;
@@ -242,7 +246,7 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set readfds;
-        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, &readfds, nullptr, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }

@@ -15,7 +15,8 @@ static void toTimeval(int64_t milliseconds, struct timeval* dest) {
     dest->tv_usec = milliseconds % 1000 * 1000;
 }
 
-static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefds,
+static error waitUntilReady(const SocketFD& fd,
+        fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
         int64_t timeoutMilliseconds) {
     if (readfds != nullptr) {
         FD_ZERO(readfds);
@@ -25,11 +26,14 @@ static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefd
         FD_ZERO(writefds);
         FD_SET(fd, writefds);
     }
-
+    if (exceptfds != nullptr) {
+        FD_ZERO(exceptfds);
+        FD_SET(fd, exceptfds);
+    }
     struct timeval timeout;
     toTimeval(timeoutMilliseconds, &timeout);
 
-    int result = select(0, readfds, writefds, nullptr, &timeout);
+    int result = select(0, readfds, writefds, exceptfds, &timeout);
     if (result == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     } else if (result == 0) {
@@ -85,8 +89,8 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
                 return error::wrap(etype::os, connErr);
             }
         }
-        fd_set writefds;
-        error err = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
+        fd_set writefds, exceptfds;
+        error err = waitUntilReady(fd, nullptr, &writefds, &exceptfds, timeoutMilliseconds);
         if (err != error::nil) {
             closesocket(fd);
             return err;
@@ -176,7 +180,7 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set readfds;
-        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, &readfds, nullptr, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }
@@ -203,7 +207,7 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set writefds;
-        error err = waitUntilReady(m_fd, nullptr, &writefds, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, nullptr, &writefds, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }
@@ -254,7 +258,7 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set readfds;
-        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, &readfds, nullptr, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }
