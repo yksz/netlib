@@ -8,7 +8,7 @@
  #include <netdb.h>
 #endif // defined(_WIN32) || defined(_WIN64)
 #ifdef NET_USE_OPENSSL
-#include <openssl/err.h>
+ #include <openssl/err.h>
 #endif // NET_USE_OPENSSL
 
 namespace net {

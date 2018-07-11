@@ -1,6 +1,5 @@
 #include "net/tcp.h"
 #include <cassert>
-#include <cstring>
 #include <winsock2.h>
 #include "net/internal/init.h"
 #include "net/resolver.h"
@@ -66,8 +65,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         return error::wrap(etype::os, WSAGetLastError());
     }
 
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = inet_addr(remoteAddr.c_str());
@@ -115,30 +113,29 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 
     BOOL enabled = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*) &enabled, sizeof(enabled)) == SOCKET_ERROR) {
-        goto fail;
+        int err = WSAGetLastError();
+        closesocket(fd);
+        return error::wrap(etype::os, err);
     }
 
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        goto fail;
+        int err = WSAGetLastError();
+        closesocket(fd);
+        return error::wrap(etype::os, err);
     }
 
     if (listen(fd, SOMAXCONN) == SOCKET_ERROR) {
-        goto fail;
-    } else {
-        *serverSock = std::make_shared<TCPListener>(fd);
-        return error::nil;
+        int err = WSAGetLastError();
+        closesocket(fd);
+        return error::wrap(etype::os, err);
     }
 
-fail:
-    int err = WSAGetLastError();
-    closesocket(fd);
-    return error::wrap(etype::os, err);
+    *serverSock = std::make_shared<TCPListener>(fd);
+    return error::nil;
 }
 
 TCPSocket::~TCPSocket() {

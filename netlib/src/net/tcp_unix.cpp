@@ -1,7 +1,6 @@
 #include "net/tcp.h"
 #include <cassert>
 #include <cerrno>
-#include <cstring>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
@@ -73,8 +72,7 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         return error::wrap(etype::os, errno);
     }
 
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = inet_addr(remoteAddr.c_str());
@@ -122,30 +120,29 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 
     int enabled = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled)) == -1) {
-        goto fail;
+        int err = errno;
+        close(fd);
+        return error::wrap(etype::os, err);
     }
 
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-        goto fail;
+        int err = errno;
+        close(fd);
+        return error::wrap(etype::os, err);
     }
 
     if (listen(fd, SOMAXCONN) == -1) {
-        goto fail;
-    } else {
-        *serverSock = std::make_shared<TCPListener>(fd);
-        return error::nil;
+        int err = errno;
+        close(fd);
+        return error::wrap(etype::os, err);
     }
 
-fail:
-    int err = errno;
-    close(fd);
-    return error::wrap(etype::os, err);
+    *serverSock = std::make_shared<TCPListener>(fd);
+    return error::nil;
 }
 
 TCPSocket::~TCPSocket() {
