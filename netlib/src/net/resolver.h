@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include "net/error.h"
+#include "net/fd.h"
 
 namespace net {
 
@@ -10,6 +12,12 @@ namespace net {
  * @param[out] addr
  */
 error LookupAddress(const std::string& host, std::string* addr);
+
+/**
+ * @param[in] fd
+ * @param[out] port
+ */
+error LookupPort(const SocketFD& fd, uint16_t* port);
 
 /**
  * @param[out] host
