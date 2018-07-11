@@ -62,10 +62,10 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
 
     internal::init();
 
-    std::string ipAddr;
-    error luErr = LookupAddress(host, &ipAddr);
-    if (luErr != error::nil) {
-        return luErr;
+    std::string remoteAddr;
+    error addrErr = LookupAddress(host, &remoteAddr);
+    if (addrErr != error::nil) {
+        return addrErr;
     }
 
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -77,36 +77,34 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = inet_addr(ipAddr.c_str());
+    serverAddr.sin_addr.s_addr = inet_addr(remoteAddr.c_str());
 
     if (timeoutMilliseconds <= 0) { // connect in blocking mode
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-            int err = errno;
+            int connErr = errno;
             close(fd);
-            return error::wrap(etype::os, err);
+            return error::wrap(etype::os, connErr);
         }
-        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-        return error::nil;
     } else { // connect in non blocking mode
         ioctl(fd, FIONBIO, &kNonBlockingMode);
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-            int err = errno;
-            if (err != EINPROGRESS) {
+            int connErr = errno;
+            if (connErr != EINPROGRESS) {
                 close(fd);
-                return error::wrap(etype::os, err);
+                return error::wrap(etype::os, connErr);
             }
         }
         fd_set writefds;
-        error connErr = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
-        if (connErr != error::nil) {
+        error err = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
+        if (err != error::nil) {
             close(fd);
-            return connErr;
+            return err;
         }
-
         ioctl(fd, FIONBIO, &kBlockingMode);
-        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-        return error::nil;
     }
+
+    *clientSock = std::make_shared<TCPSocket>(fd, remoteAddr, port);
+    return error::nil;
 }
 
 error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
@@ -253,14 +251,16 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
         }
     }
 
-    struct sockaddr_in clientAddr;
-    socklen_t len = sizeof(clientAddr);
-
-    int clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
+    struct sockaddr_in clientAddr = {0};
+    socklen_t addrlen = sizeof(clientAddr);
+    int clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &addrlen);
     if (clientFD == -1) {
         return error::wrap(etype::os, errno);
     }
-    *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
+
+    std::string remoteAddr = inet_ntoa(clientAddr.sin_addr);
+    uint16_t remotePort = ntohs(clientAddr.sin_port);
+    *clientSock = std::make_shared<TCPSocket>(clientFD, std::move(remoteAddr), remotePort);
     return error::nil;
 }
 

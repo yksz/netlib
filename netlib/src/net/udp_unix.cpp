@@ -17,8 +17,8 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
 
     internal::init();
 
-    std::string ipAddr;
-    error err = LookupAddress(host, &ipAddr);
+    std::string remoteAddr;
+    error err = LookupAddress(host, &remoteAddr);
     if (err != error::nil) {
         return err;
     }
@@ -28,9 +28,7 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
         return error::wrap(etype::os, errno);
     }
 
-    if (clientSock != nullptr) {
-        *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
-    }
+    *clientSock = std::make_shared<UDPSocket>(fd, std::move(remoteAddr), port);
     return error::nil;
 }
 
