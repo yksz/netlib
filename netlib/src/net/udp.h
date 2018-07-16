@@ -5,18 +5,10 @@
 #include <memory>
 #include <string>
 #include "net/error.h"
+#include "net/fd.h"
 #include "net/stream.h"
-#if defined(_WIN32) || defined(_WIN64)
- #include <winsock2.h>
-#endif // defined(_WIN32) || defined(_WIN64)
 
 namespace net {
-
-#if defined(_WIN32) || defined(_WIN64)
-using SocketFD = SOCKET;
-#else
-using SocketFD = int;
-#endif // defined(_WIN32) || defined(_WIN64)
 
 class UDPSocket final : public ReadWriteCloser {
 public:
@@ -35,12 +27,14 @@ public:
             std::string* addr, uint16_t* port);
     error Write(const char* buf, size_t len, int* nbytes);
     error WriteTo(const char* buf, size_t len,
-           const std::string& addr, uint16_t port, int* nbytes);
+            const std::string& addr, uint16_t port, int* nbytes);
     /**
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetTimeout(int64_t timeoutMilliseconds);
     SocketFD FD() { return m_fd; }
+    std::string RemoteAddress() { return m_remoteAddr; }
+    uint16_t RemotePort() { return m_remotePort; }
 
 private:
     const SocketFD m_fd;

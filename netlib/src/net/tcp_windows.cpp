@@ -1,6 +1,5 @@
 #include "net/tcp.h"
 #include <cassert>
-#include <cstring>
 #include <winsock2.h>
 #include "net/internal/init.h"
 #include "net/resolver.h"
@@ -16,7 +15,8 @@ static void toTimeval(int64_t milliseconds, struct timeval* dest) {
     dest->tv_usec = milliseconds % 1000 * 1000;
 }
 
-static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefds,
+static error waitUntilReady(const SocketFD& fd,
+        fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
         int64_t timeoutMilliseconds) {
     if (readfds != nullptr) {
         FD_ZERO(readfds);
@@ -26,11 +26,14 @@ static error waitUntilReady(const SocketFD& fd, fd_set* readfds, fd_set* writefd
         FD_ZERO(writefds);
         FD_SET(fd, writefds);
     }
-
+    if (exceptfds != nullptr) {
+        FD_ZERO(exceptfds);
+        FD_SET(fd, exceptfds);
+    }
     struct timeval timeout;
     toTimeval(timeoutMilliseconds, &timeout);
 
-    int result = select(0, readfds, writefds, nullptr, &timeout);
+    int result = select(0, readfds, writefds, exceptfds, &timeout);
     if (result == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     } else if (result == 0) {
@@ -55,10 +58,10 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
 
     internal::init();
 
-    std::string ipAddr;
-    error luErr = LookupAddress(host, &ipAddr);
-    if (luErr != error::nil) {
-        return luErr;
+    std::string remoteAddr;
+    error addrErr = LookupAddress(host, &remoteAddr);
+    if (addrErr != error::nil) {
+        return addrErr;
     }
 
     SOCKET fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -66,40 +69,37 @@ error ConnectTCP(const std::string& host, uint16_t port, int64_t timeoutMillisec
         return error::wrap(etype::os, WSAGetLastError());
     }
 
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.S_un.S_addr = inet_addr(ipAddr.c_str());
+    serverAddr.sin_addr.S_un.S_addr = inet_addr(remoteAddr.c_str());
 
     if (timeoutMilliseconds <= 0) { // connect in blocking mode
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-            int err = WSAGetLastError();
+            int connErr = WSAGetLastError();
             closesocket(fd);
-            return error::wrap(etype::os, err);
+            return error::wrap(etype::os, connErr);
         }
-        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-        return error::nil;
     } else { // connect in non blocking mode
         ioctlsocket(fd, FIONBIO, &kNonBlockingMode);
         if (connect(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-            int err = WSAGetLastError();
-            if (err != WSAEWOULDBLOCK) {
+            int connErr = WSAGetLastError();
+            if (connErr != WSAEWOULDBLOCK) {
                 closesocket(fd);
-                return error::wrap(etype::os, err);
+                return error::wrap(etype::os, connErr);
             }
         }
-        fd_set writefds;
-        error connErr = waitUntilReady(fd, nullptr, &writefds, timeoutMilliseconds);
-        if (connErr != error::nil) {
+        fd_set writefds, exceptfds;
+        error err = waitUntilReady(fd, nullptr, &writefds, &exceptfds, timeoutMilliseconds);
+        if (err != error::nil) {
             closesocket(fd);
-            return connErr;
+            return err;
         }
-
         ioctlsocket(fd, FIONBIO, &kBlockingMode);
-        *clientSock = std::make_shared<TCPSocket>(fd, ipAddr);
-        return error::nil;
     }
+
+    *clientSock = std::make_shared<TCPSocket>(fd, std::move(remoteAddr), port);
+    return error::nil;
 }
 
 error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
@@ -117,30 +117,29 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
 
     BOOL enabled = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*) &enabled, sizeof(enabled)) == SOCKET_ERROR) {
-        goto fail;
+        int err = WSAGetLastError();
+        closesocket(fd);
+        return error::wrap(etype::os, err);
     }
 
-    struct sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
+    struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-
     if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        goto fail;
+        int err = WSAGetLastError();
+        closesocket(fd);
+        return error::wrap(etype::os, err);
     }
 
     if (listen(fd, SOMAXCONN) == SOCKET_ERROR) {
-        goto fail;
-    } else {
-        *serverSock = std::make_shared<TCPListener>(fd);
-        return error::nil;
+        int err = WSAGetLastError();
+        closesocket(fd);
+        return error::wrap(etype::os, err);
     }
 
-fail:
-    int err = WSAGetLastError();
-    closesocket(fd);
-    return error::wrap(etype::os, err);
+    *serverSock = std::make_shared<TCPListener>(fd);
+    return error::nil;
 }
 
 TCPSocket::~TCPSocket() {
@@ -181,7 +180,7 @@ error TCPSocket::Read(char* buf, size_t len, int* nbytes) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set readfds;
-        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, &readfds, nullptr, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }
@@ -208,7 +207,7 @@ error TCPSocket::Write(const char* buf, size_t len, int* nbytes) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set writefds;
-        error err = waitUntilReady(m_fd, nullptr, &writefds, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, nullptr, &writefds, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }
@@ -259,20 +258,22 @@ error TCPListener::Accept(std::shared_ptr<TCPSocket>* clientSock) {
 
     if (m_timeoutMilliseconds > 0) {
         fd_set readfds;
-        error err = waitUntilReady(m_fd, &readfds, nullptr, m_timeoutMilliseconds);
+        error err = waitUntilReady(m_fd, &readfds, nullptr, nullptr, m_timeoutMilliseconds);
         if (err != error::nil) {
             return err;
         }
     }
 
-    struct sockaddr_in clientAddr;
-    int len = sizeof(clientAddr);
-
-    SOCKET clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &len);
+    struct sockaddr_in clientAddr = {0};
+    int addrlen = sizeof(clientAddr);
+    SOCKET clientFD = accept(m_fd, (struct sockaddr*) &clientAddr, &addrlen);
     if (clientFD == INVALID_SOCKET) {
         return error::wrap(etype::os, WSAGetLastError());
     }
-    *clientSock = std::make_shared<TCPSocket>(clientFD, inet_ntoa(clientAddr.sin_addr));
+
+    std::string remoteAddr = inet_ntoa(clientAddr.sin_addr);
+    uint16_t remotePort = ntohs(clientAddr.sin_port);
+    *clientSock = std::make_shared<TCPSocket>(clientFD, std::move(remoteAddr), remotePort);
     return error::nil;
 }
 

@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include "net/resolver.h"
 #include "net/udp.h"
 
 using namespace net;
@@ -27,6 +28,8 @@ int main(int argc, char** argv) {
         return 1;
     }
     socket->SetTimeout(kSockTimeout);
+
+    printf("Connected to %s:%d\n", socket->RemoteAddress().c_str(), socket->RemotePort());
     for (int i = 0; i < kSendCount; i++) {
         int nbytes;
         socket->Write(msg, strlen(msg), &nbytes);

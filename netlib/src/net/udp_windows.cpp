@@ -14,8 +14,8 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
 
     internal::init();
 
-    std::string ipAddr;
-    error err = LookupAddress(host, &ipAddr);
+    std::string remoteAddr;
+    error err = LookupAddress(host, &remoteAddr);
     if (err != error::nil) {
         return err;
     }
@@ -25,7 +25,7 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
         return error::wrap(etype::os, WSAGetLastError());
     }
 
-    *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
+    *clientSock = std::make_shared<UDPSocket>(fd, std::move(remoteAddr), port);
     return error::nil;
 }
 
@@ -46,8 +46,7 @@ error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
     serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
-
-    if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
+    if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         int err = WSAGetLastError();
         closesocket(fd);
         return error::wrap(etype::os, err);
@@ -66,7 +65,7 @@ error UDPSocket::Close() {
         return error::nil;
     }
 
-    if (closesocket(m_fd) == -1) {
+    if (closesocket(m_fd) == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     }
     m_closed = true;
@@ -80,7 +79,7 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
     }
 
     int size = recv(m_fd, buf, len, 0);
-    if (size == -1) {
+    if (size == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     }
     if (size == 0) {
@@ -102,7 +101,7 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
     struct sockaddr_in from = {0};
     int fromlen = sizeof(from);
     int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr*) &from, &fromlen);
-    if (size == -1) {
+    if (size == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     }
     *addr = inet_ntoa(from.sin_addr);
@@ -140,7 +139,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_addr.S_un.S_addr = inet_addr(addr.c_str());
     to.sin_port = htons(port);
     int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
-    if (size == -1) {
+    if (size == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     }
     if (nbytes != nullptr) {
@@ -156,7 +155,6 @@ error UDPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     }
 
     DWORD soTimeout = (DWORD) ((timeoutMilliseconds > 0) ? timeoutMilliseconds : 0);
-
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
         return error::wrap(etype::os, WSAGetLastError());
     }

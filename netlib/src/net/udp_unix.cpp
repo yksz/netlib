@@ -9,6 +9,12 @@
 
 namespace net {
 
+static void toTimeval(int64_t milliseconds, struct timeval* dest) {
+    milliseconds = (milliseconds > 0) ? milliseconds : 0;
+    dest->tv_sec = milliseconds / 1000;
+    dest->tv_usec = milliseconds % 1000 * 1000;
+}
+
 error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSocket>* clientSock) {
     if (clientSock == nullptr) {
         assert(0 && "clientSock must not be nullptr");
@@ -17,8 +23,8 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
 
     internal::init();
 
-    std::string ipAddr;
-    error err = LookupAddress(host, &ipAddr);
+    std::string remoteAddr;
+    error err = LookupAddress(host, &remoteAddr);
     if (err != error::nil) {
         return err;
     }
@@ -28,9 +34,7 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
         return error::wrap(etype::os, errno);
     }
 
-    if (clientSock != nullptr) {
-        *clientSock = std::make_shared<UDPSocket>(fd, std::move(ipAddr), port);
-    }
+    *clientSock = std::make_shared<UDPSocket>(fd, std::move(remoteAddr), port);
     return error::nil;
 }
 
@@ -106,7 +110,7 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
 
     struct sockaddr_in from = {0};
     socklen_t fromlen = sizeof(from);
-    int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr *) &from, &fromlen);
+    int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr*) &from, &fromlen);
     if (size == -1) {
         return error::wrap(etype::os, errno);
     }
@@ -144,6 +148,7 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
     to.sin_family = AF_INET;
     to.sin_addr.s_addr = inet_addr(addr.c_str());
     to.sin_port = htons(port);
+
     int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
     if (size == -1) {
         return error::wrap(etype::os, errno);
@@ -161,10 +166,7 @@ error UDPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     }
 
     struct timeval soTimeout;
-    timeoutMilliseconds = (timeoutMilliseconds > 0) ? timeoutMilliseconds : 0;
-    soTimeout.tv_sec = timeoutMilliseconds / 1000;
-    soTimeout.tv_usec = timeoutMilliseconds % 1000 * 1000;
-
+    toTimeval(timeoutMilliseconds, &soTimeout);
     if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return error::wrap(etype::os, errno);
     }

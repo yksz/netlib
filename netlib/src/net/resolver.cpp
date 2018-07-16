@@ -24,8 +24,8 @@ error LookupAddress(const std::string& host, std::string* addr) {
 
     internal::init();
 
-    struct addrinfo hints = {0};
     struct addrinfo* result;
+    struct addrinfo hints = {0};
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_family = AF_INET;
 
@@ -38,6 +38,27 @@ error LookupAddress(const std::string& host, std::string* addr) {
     return error::nil;
 }
 
+error LookupPort(const SocketFD& fd, uint16_t* port) {
+    if (port == nullptr) {
+        assert(0 && "port must not be nullptr");
+        return error::illegal_argument;
+    }
+
+    internal::init();
+
+    struct sockaddr_in addr = {0};
+    socklen_t addrlen = sizeof(addr);
+    if (getsockname(fd, (struct sockaddr*) &addr, &addrlen) != 0) {
+#if defined(_WIN32) || defined(_WIN64)
+        return error::wrap(etype::os, WSAGetLastError());
+#else
+        return error::wrap(etype::os, errno);
+#endif // defined(_WIN32) || defined(_WIN64)
+    }
+    *port = ntohs(addr.sin_port);
+    return error::nil;
+}
+
 error LookupLocalHostName(std::string* host) {
     if (host == nullptr) {
         assert(0 && "host must not be nullptr");
@@ -47,7 +68,7 @@ error LookupLocalHostName(std::string* host) {
     internal::init();
 
     char name[256] = {0};
-    if (gethostname(name, sizeof(name)) == -1) {
+    if (gethostname(name, sizeof(name)) != 0) {
 #if defined(_WIN32) || defined(_WIN64)
         return error::wrap(etype::os, WSAGetLastError());
 #else

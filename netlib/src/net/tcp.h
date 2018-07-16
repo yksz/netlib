@@ -5,23 +5,15 @@
 #include <memory>
 #include <string>
 #include "net/error.h"
+#include "net/fd.h"
 #include "net/stream.h"
-#if defined(_WIN32) || defined(_WIN64)
- #include <winsock2.h>
-#endif // defined(_WIN32) || defined(_WIN64)
 
 namespace net {
 
-#if defined(_WIN32) || defined(_WIN64)
-using SocketFD = SOCKET;
-#else
-using SocketFD = int;
-#endif // defined(_WIN32) || defined(_WIN64)
-
 class TCPSocket final : public ReadWriteCloser {
 public:
-    TCPSocket(const SocketFD& fd, const std::string& addr)
-            : m_fd(fd), m_remoteAddr(addr), m_closed(false), m_timeoutMilliseconds(0) {}
+    TCPSocket(const SocketFD& fd, const std::string& addr, uint16_t port)
+            : m_fd(fd), m_remoteAddr(addr), m_remotePort(port), m_closed(false), m_timeoutMilliseconds(0) {}
     ~TCPSocket();
     TCPSocket(const TCPSocket&) = delete;
     TCPSocket& operator=(const TCPSocket&) = delete;
@@ -36,10 +28,12 @@ public:
     error SetTimeout(int64_t timeoutMilliseconds);
     SocketFD FD() { return m_fd; }
     std::string RemoteAddress() { return m_remoteAddr; }
+    uint16_t RemotePort() { return m_remotePort; }
 
 private:
     const SocketFD m_fd;
     const std::string m_remoteAddr;
+    const uint16_t m_remotePort;
     std::atomic<bool> m_closed;
     int64_t m_timeoutMilliseconds;
 };

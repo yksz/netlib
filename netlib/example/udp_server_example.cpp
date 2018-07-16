@@ -1,21 +1,29 @@
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
+#include "net/resolver.h"
 #include "net/udp.h"
 
 using namespace net;
 
-static const uint16_t kPort = 8080;
-
-int main(void) {
+int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
 
+    uint16_t port = 0; // random
+    if (argc > 1) {
+        port = (uint16_t)atoi(argv[1]);
+    }
+
     std::shared_ptr<UDPSocket> socket;
-    error err = ListenUDP(kPort, &socket);
+    error err = ListenUDP(port, &socket);
     if (err != error::nil) {
         printf("%s\n", error::Message(err));
         return 1;
     }
-    printf("Listening on port %d\n", kPort);
+
+    uint16_t localPort = 0;
+    LookupPort(socket->FD(), &localPort);
+    printf("Listening on port %d\n", localPort);
     for (;;) {
         char buf[256] = {0};
         int nbytes;
