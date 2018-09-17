@@ -34,6 +34,7 @@ public:
      * @param[in] timeoutMilliseconds Set the timeout in milliseconds. Block if 0 or a negative integer is specified.
      */
     error SetTimeout(int64_t timeoutMilliseconds) { return m_tcp->SetTimeout(timeoutMilliseconds); }
+    error SetKeepAlive(bool on) { return m_tcp->SetKeepAlive(on); }
     SocketFD FD() { return m_tcp->FD(); }
     std::string RemoteAddress() { return m_tcp->RemoteAddress(); }
     uint16_t RemotePort() { return m_tcp->RemotePort(); }

@@ -218,6 +218,19 @@ error TCPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     return error::nil;
 }
 
+error TCPSocket::SetKeepAlive(bool on) {
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+    int enabled = on;
+    if (setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+    return error::nil;
+}
+
 TCPListener::~TCPListener() {
     Close();
 }

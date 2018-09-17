@@ -115,7 +115,7 @@ error ListenTCP(uint16_t port, std::shared_ptr<TCPListener>* serverSock) {
         return error::wrap(etype::os, WSAGetLastError());
     }
 
-    BOOL enabled = 1;
+    BOOL enabled = TRUE;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const char*) &enabled, sizeof(enabled)) == SOCKET_ERROR) {
         int err = WSAGetLastError();
         closesocket(fd);
@@ -227,6 +227,19 @@ error TCPSocket::SetTimeout(int64_t timeoutMilliseconds) {
         ioctlsocket(m_fd, FIONBIO, &kBlockingMode);
     }
     m_timeoutMilliseconds = timeoutMilliseconds;
+    return error::nil;
+}
+
+error TCPSocket::SetKeepAlive(bool on) {
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+    BOOL enabled = on;
+    if (setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, (const char*) &enabled, sizeof(enabled)) == SOCKET_ERROR) {
+        return error::wrap(etype::os, errno);
+    }
     return error::nil;
 }
 

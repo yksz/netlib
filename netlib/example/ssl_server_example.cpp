@@ -56,6 +56,8 @@ int main(int argc, char** argv) {
             printf("%s\n", error::Message(err));
             continue;
         }
+        socket->SetKeepAlive(true);
+
         std::thread th([=]() {
             handle(socket);
         });
