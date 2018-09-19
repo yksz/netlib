@@ -36,6 +36,7 @@ public:
     error SetTimeout(int64_t timeoutMilliseconds) { return m_tcp->SetTimeout(timeoutMilliseconds); }
     SocketFD FD() { return m_tcp->FD(); }
     std::string RemoteAddress() { return m_tcp->RemoteAddress(); }
+    uint16_t RemotePort() { return m_tcp->RemotePort(); }
 
 private:
     std::shared_ptr<TCPSocket> m_tcp;
