@@ -240,6 +240,38 @@ error TCPSocket::SetKeepAlive(bool on) {
     return error::nil;
 }
 
+error TCPSocket::SetKeepAlivePeriod(int periodSeconds) {
+    if (periodSeconds < 1) {
+        assert(0 && "periodSeconds must not be less than 1");
+        return error::illegal_argument;
+    }
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+#ifdef TCP_KEEPIDLE
+    int keepidle = periodSeconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#elif TCP_KEEPALIVE
+    int keepalive = periodSeconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPALIVE, &keepalive, sizeof(keepalive)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#endif // TCP_KEEPIDLE
+
+#ifdef TCP_KEEPINTVL
+    int keepintvl = periodSeconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#endif // TCP_KEEPINTVL
+
+    return error::nil;
+}
+
 TCPListener::~TCPListener() {
     Close();
 }

@@ -1,5 +1,6 @@
 #include "net/tcp.h"
 #include <cassert>
+#include <mstcpip.h>
 #include <winsock2.h>
 #include "net/internal/init.h"
 #include "net/resolver.h"
@@ -239,6 +240,27 @@ error TCPSocket::SetKeepAlive(bool on) {
     BOOL enabled = on;
     if (setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, (const char*) &enabled, sizeof(enabled)) == SOCKET_ERROR) {
         return error::wrap(etype::os, errno);
+    }
+    return error::nil;
+}
+
+error TCPSocket::SetKeepAlivePeriod(int periodSeconds) {
+    if (periodSeconds < 1) {
+        assert(0 && "periodSeconds must not be less than 1");
+        return error::illegal_argument;
+    }
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+    struct tcp_keepalive keepalive;
+    keepalive.onoff = 1;
+    keepalive.keepalivetime = periodSeconds * 1000;
+    keepalive.keepaliveinterval = keepalive.keepalivetime;
+    DWORD ret;
+    if (WSAIoctl(m_fd, SIO_KEEPALIVE_VALS, &keepalive, sizeof(keepalive), nullptr, 0, &ret, nullptr, nullptr) == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
     return error::nil;
 }

@@ -7,6 +7,7 @@
 using namespace net;
 
 static const uint16_t kPort = 8443;
+static const int kKeepAlivePeriod = 30; // s
 
 static void handle(const std::shared_ptr<SSLSocket>& socket) {
     printf("%s:%d connected: ", socket->RemoteAddress().c_str(), socket->RemotePort());
@@ -31,6 +32,7 @@ static void handle(const std::shared_ptr<SSLSocket>& socket) {
 
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
+
     if (argc <= 2) {
         printf("usage: %s <certfile> <keyfile>\n", argv[0]);
         exit(1);
@@ -57,6 +59,7 @@ int main(int argc, char** argv) {
             continue;
         }
         socket->SetKeepAlive(true);
+        socket->SetKeepAlivePeriod(kKeepAlivePeriod);
 
         std::thread th([=]() {
             handle(socket);

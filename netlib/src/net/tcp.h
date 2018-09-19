@@ -27,6 +27,7 @@ public:
      */
     error SetTimeout(int64_t timeoutMilliseconds);
     error SetKeepAlive(bool on);
+    error SetKeepAlivePeriod(int periodSeconds);
     SocketFD FD() { return m_fd; }
     std::string RemoteAddress() { return m_remoteAddr; }
     uint16_t RemotePort() { return m_remotePort; }
