@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -214,6 +215,14 @@ error TCPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return error::wrap(etype::os, errno);
     }
+
+#ifdef TCP_USER_TIMEOUT
+    unsigned int userTimeout = timeoutMilliseconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &userTimeout, sizeof(userTimeout)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#endif
+
     m_timeoutMilliseconds = timeoutMilliseconds;
     return error::nil;
 }
