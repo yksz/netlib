@@ -7,13 +7,15 @@
 using namespace net;
 
 static const uint16_t kPort = 8443;
+static const int kKeepAlivePeriod = 30; // s
 
-static void handle(const std::shared_ptr<SSLSocket>& clientSock) {
-    std::cout << "ThreadID = " << std::this_thread::get_id() << std::endl;
+static void handle(const std::shared_ptr<SSLSocket>& socket) {
+    printf("%s:%d connected: ", socket->RemoteAddress().c_str(), socket->RemotePort());
+    std::cout << "thread=" << std::this_thread::get_id() << std::endl;
 
     char buf[8];
     while (true) {
-        error err = clientSock->ReadLine(buf, sizeof(buf));
+        error err = socket->ReadLine(buf, sizeof(buf));
         if (err == error::eof) {
             break;
         }
@@ -23,11 +25,14 @@ static void handle(const std::shared_ptr<SSLSocket>& clientSock) {
         }
         printf("%s", buf);
     }
-    clientSock->Close();
+    socket->Close();
+
+    printf("%s:%d closed\n", socket->RemoteAddress().c_str(), socket->RemotePort());
 }
 
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);
+
     if (argc <= 2) {
         printf("usage: %s <certfile> <keyfile>\n", argv[0]);
         exit(1);
@@ -53,7 +58,9 @@ int main(int argc, char** argv) {
             printf("%s\n", error::Message(err));
             continue;
         }
-        printf("%s connected\n", socket->RemoteAddress().c_str());
+        socket->SetKeepAlive(true);
+        socket->SetKeepAlivePeriod(kKeepAlivePeriod);
+
         std::thread th([=]() {
             handle(socket);
         });

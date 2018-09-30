@@ -4,6 +4,7 @@
 #include <chrono>
 #include <memory>
 #include <thread>
+#include "net/resolver.h"
 #include "net/ssl.h"
 
 using namespace net;
@@ -36,6 +37,11 @@ int main(int argc, char** argv) {
         return 1;
     }
     socket->SetTimeout(kSockTimeout);
+
+    uint16_t localPort = 0;
+    LookupPort(socket->FD(), &localPort);
+    printf("Connected to %s:%d from :%d\n",
+            socket->RemoteAddress().c_str(), socket->RemotePort(), localPort);
     for (int i = 0; i < kSendCount; i++) {
         socket->WriteFull(msg, strlen(msg));
         socket->WriteFull("\n", 1);

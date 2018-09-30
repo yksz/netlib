@@ -8,8 +8,11 @@
 
 using namespace net;
 
+static const int kKeepAlivePeriod = 10; // s
+
 static void handle(const std::shared_ptr<TCPSocket>& socket) {
-    std::cout << "ThreadID = " << std::this_thread::get_id() << std::endl;
+    printf("%s:%d connected: ", socket->RemoteAddress().c_str(), socket->RemotePort());
+    std::cout << "thread=" << std::this_thread::get_id() << std::endl;
 
     char buf[8];
     while (true) {
@@ -24,6 +27,8 @@ static void handle(const std::shared_ptr<TCPSocket>& socket) {
         printf("%s", buf);
     }
     socket->Close();
+
+    printf("%s:%d closed\n", socket->RemoteAddress().c_str(), socket->RemotePort());
 }
 
 int main(int argc, char** argv) {
@@ -51,7 +56,9 @@ int main(int argc, char** argv) {
             printf("%s\n", error::Message(err));
             continue;
         }
-        printf("%s:%d connected\n", socket->RemoteAddress().c_str(), socket->RemotePort());
+        socket->SetKeepAlive(true);
+        socket->SetKeepAlivePeriod(kKeepAlivePeriod);
+
         std::thread th([=]() {
             handle(socket);
         });

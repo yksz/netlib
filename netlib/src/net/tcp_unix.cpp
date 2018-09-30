@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -214,7 +215,60 @@ error TCPSocket::SetTimeout(int64_t timeoutMilliseconds) {
     if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
         return error::wrap(etype::os, errno);
     }
+
+#ifdef TCP_USER_TIMEOUT
+    unsigned int userTimeout = timeoutMilliseconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_USER_TIMEOUT, &userTimeout, sizeof(userTimeout)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#endif
+
     m_timeoutMilliseconds = timeoutMilliseconds;
+    return error::nil;
+}
+
+error TCPSocket::SetKeepAlive(bool on) {
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+    int enabled = on;
+    if (setsockopt(m_fd, SOL_SOCKET, SO_KEEPALIVE, &enabled, sizeof(enabled)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+    return error::nil;
+}
+
+error TCPSocket::SetKeepAlivePeriod(int periodSeconds) {
+    if (periodSeconds < 1) {
+        assert(0 && "periodSeconds must not be less than 1");
+        return error::illegal_argument;
+    }
+    if (m_closed) {
+        assert(0 && "Already closed");
+        return error::illegal_state;
+    }
+
+#ifdef TCP_KEEPIDLE
+    int keepidle = periodSeconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPIDLE, &keepidle, sizeof(keepidle)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#elif TCP_KEEPALIVE
+    int keepalive = periodSeconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPALIVE, &keepalive, sizeof(keepalive)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#endif // TCP_KEEPIDLE
+
+#ifdef TCP_KEEPINTVL
+    int keepintvl = periodSeconds;
+    if (setsockopt(m_fd, IPPROTO_TCP, TCP_KEEPINTVL, &keepintvl, sizeof(keepintvl)) == -1) {
+        return error::wrap(etype::os, errno);
+    }
+#endif // TCP_KEEPINTVL
+
     return error::nil;
 }
 
