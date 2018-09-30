@@ -58,7 +58,7 @@ TEST(TCP, ConnectionTimeout) {
     using namespace std::chrono;
 
     // setup:
-    const std::string host = "192.168.0.0";
+    const std::string host = "192.168.0.254"; // a host which cannot connect
     const unsigned int port = 8080;
     const int64_t connectionTimeout = 10; // ms
 
