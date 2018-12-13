@@ -1,6 +1,7 @@
 #include "net/interface.h"
 #include <cassert>
 #include <cerrno>
+#include <memory>
 #include <net/if.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -67,8 +68,8 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
         return error::wrap(etype::os, err);
     }
 
-    char* buf = new char[ifc.ifc_len];
-    ifc.ifc_buf = buf;
+    std::unique_ptr<char[]> buf(new char[ifc.ifc_len]);
+    ifc.ifc_buf = buf.get();
     if (ioctl(fd, SIOCGIFCONF, &ifc) == -1) {
         int err = errno;
         close(fd);
@@ -100,7 +101,6 @@ error GetNetworkInterfaces(std::vector<NetworkInterface>* infs) {
     }
 
 fail:
-    delete[] buf;
     close(fd);
     return err;
 }
