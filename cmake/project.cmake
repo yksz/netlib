@@ -18,8 +18,17 @@ macro(project_add_googletest)
     set(test_libraries ${arg_DEPENDS}
         gtest
         gtest_main
+    )
+if(WIN32)
+    set(test_libraries ${test_libraries}
+        ${PROJECT_NAME}_static
+    )
+else() # UNIX
+    set(test_libraries ${test_libraries}
+        ${PROJECT_NAME}
         pthread
     )
+endif()
     foreach(test_path IN LISTS arg_UNPARSED_ARGUMENTS)
         string(REPLACE "/" "_" test_name ${test_path})
         set(test ${test_name})

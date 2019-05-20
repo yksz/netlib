@@ -4,7 +4,10 @@ set(tests
     tcp_test
     udp_test
 )
-if(UNIX AND APPLE)
+if(WIN32)
+    set(tests ${tests}
+    )
+elseif(UNIX AND APPLE)
     set(tests ${tests}
         interface_bsd_test
     )
@@ -16,7 +19,4 @@ endif()
 
 project_add_googletest(
     ${tests}
-
-    DEPENDS
-    ${PROJECT_NAME}
 )
