@@ -1,14 +1,24 @@
 #!/bin/sh
 
-DIRNAME="eclipse"
+BUILD_DIR_POSTFIX="_eclipse"
 
-cd `dirname "$0"`
-if [ ! -e ${DIRNAME} ] ; then
-    mkdir ${DIRNAME}
+script_dir=`dirname "${0}"`
+script_path=$(cd ${script_dir} && pwd -P)
+script_basename=`basename "${script_path}"`
+build_dir=${script_basename}${BUILD_DIR_POSTFIX}
+
+cd ${script_path}/../
+if [ ! -e ${build_dir} ] ; then
+    mkdir ${build_dir}
 fi
-cd ${DIRNAME}
+cd ${build_dir}
 
-cmake -G "Eclipse CDT4 - Unix Makefiles" \
+generator="Unix"
+if [ $1 ] && [ $1 = "mingw" ] ; then
+    generator="MinGW"
+fi
+
+cmake -G "Eclipse CDT4 - ${generator} Makefiles" \
     -DCMAKE_ECLIPSE_GENERATE_SOURCE_PROJECT=TRUE \
     -DCMAKE_ECLIPSE_VERSION=4.4 \
     -DCMAKE_BUILD_TYPE=Debug \
@@ -16,6 +26,6 @@ cmake -G "Eclipse CDT4 - Unix Makefiles" \
     -Dbuild_tests=ON \
     -Dbuild_examples=ON \
     $@ \
-    ../netlib
+    ../${script_basename}
 
 # On Eclipse: Import > General > Existing Projects into Workspace

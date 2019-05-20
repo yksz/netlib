@@ -16,7 +16,7 @@ cd build
 make
 sudo make install
 ```
-NOTE: Run "./build.sh -DNET_USE_OPENSSL=ON" if use SSL/TLS.
+NOTE: Run "./build.sh -DNETLIB_USE_OPENSSL=ON" if use SSL/TLS.
 
 or
 

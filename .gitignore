@@ -29,6 +29,5 @@
 
 # Project
 build/
-eclipse/
-eclipse-mingw/
+build_debug/
 .project
