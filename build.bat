@@ -8,8 +8,7 @@ if not exist %DIRNAME% (
 )
 cd %DIRNAME%
 
-cmake -G "Visual Studio 14" ^
-    ../netlib
+cmake -G "Visual Studio 14" ..
 cmake --build . --config Release
 
 rem cleanup

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION='1.7.0'
+VERSION='1.8.0'
 INSTALL_DIR='/usr/local'
 DOWNLOAD_DIR='/tmp'
 

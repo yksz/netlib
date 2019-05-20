@@ -8,4 +8,4 @@ if [ ! -e ${DIRNAME} ] ; then
 fi
 cd ${DIRNAME}
 
-cmake -DCMAKE_BUILD_TYPE=Release $@ ../netlib
+cmake -DCMAKE_BUILD_TYPE=Release $@ ..
