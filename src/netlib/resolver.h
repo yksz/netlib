@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include <string>
-#include "net/error.h"
-#include "net/fd.h"
+#include "netlib/error.h"
+#include "netlib/fd.h"
 
 namespace net {
 

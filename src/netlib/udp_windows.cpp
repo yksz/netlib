@@ -1,19 +1,10 @@
-#include "net/udp.h"
+#include "netlib/udp.h"
 #include <cassert>
-#include <cerrno>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include "net/internal/init.h"
-#include "net/resolver.h"
+#include <winsock2.h>
+#include "netlib/internal/init.h"
+#include "netlib/resolver.h"
 
 namespace net {
-
-static void toTimeval(int64_t milliseconds, struct timeval* dest) {
-    milliseconds = (milliseconds > 0) ? milliseconds : 0;
-    dest->tv_sec = milliseconds / 1000;
-    dest->tv_usec = milliseconds % 1000 * 1000;
-}
 
 error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSocket>* clientSock) {
     if (clientSock == nullptr) {
@@ -29,9 +20,9 @@ error ConnectUDP(const std::string& host, uint16_t port, std::shared_ptr<UDPSock
         return err;
     }
 
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd == -1) {
-        return error::wrap(etype::os, errno);
+    SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == INVALID_SOCKET) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
 
     *clientSock = std::make_shared<UDPSocket>(fd, std::move(remoteAddr), port);
@@ -46,19 +37,18 @@ error ListenUDP(uint16_t port, std::shared_ptr<UDPSocket>* serverSock) {
 
     internal::init();
 
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd == -1) {
-        return error::wrap(etype::os, errno);
+    SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd == INVALID_SOCKET) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
 
     struct sockaddr_in serverAddr = {0};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(port);
-    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-    if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == -1) {
-        int err = errno;
-        close(fd);
+    serverAddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
+    if (bind(fd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        int err = WSAGetLastError();
+        closesocket(fd);
         return error::wrap(etype::os, err);
     }
 
@@ -75,8 +65,8 @@ error UDPSocket::Close() {
         return error::nil;
     }
 
-    if (close(m_fd) == -1) {
-        return error::wrap(etype::os, errno);
+    if (closesocket(m_fd) == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
     m_closed = true;
     return error::nil;
@@ -89,8 +79,8 @@ error UDPSocket::Read(char* buf, size_t len, int* nbytes) {
     }
 
     int size = recv(m_fd, buf, len, 0);
-    if (size == -1) {
-        return error::wrap(etype::os, errno);
+    if (size == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (size == 0) {
         return error::eof;
@@ -109,10 +99,10 @@ error UDPSocket::ReadFrom(char* buf, size_t len, int* nbytes,
     }
 
     struct sockaddr_in from = {0};
-    socklen_t fromlen = sizeof(from);
+    int fromlen = sizeof(from);
     int size = recvfrom(m_fd, buf, len, 0, (struct sockaddr*) &from, &fromlen);
-    if (size == -1) {
-        return error::wrap(etype::os, errno);
+    if (size == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
     *addr = inet_ntoa(from.sin_addr);
     *port = ntohs(from.sin_port);
@@ -146,12 +136,11 @@ error UDPSocket::WriteTo(const char* buf, size_t len,
 
     struct sockaddr_in to = {0};
     to.sin_family = AF_INET;
-    to.sin_addr.s_addr = inet_addr(addr.c_str());
+    to.sin_addr.S_un.S_addr = inet_addr(addr.c_str());
     to.sin_port = htons(port);
-
     int size = sendto(m_fd, buf, len, 0, (struct sockaddr*) &to, sizeof(to));
-    if (size == -1) {
-        return error::wrap(etype::os, errno);
+    if (size == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
     if (nbytes != nullptr) {
         *nbytes = size;
@@ -165,13 +154,12 @@ error UDPSocket::SetTimeout(int64_t timeoutMilliseconds) {
         return error::illegal_state;
     }
 
-    struct timeval soTimeout;
-    toTimeval(timeoutMilliseconds, &soTimeout);
-    if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return error::wrap(etype::os, errno);
+    DWORD soTimeout = (DWORD) ((timeoutMilliseconds > 0) ? timeoutMilliseconds : 0);
+    if (setsockopt(m_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
-    if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, &soTimeout, sizeof(soTimeout)) == -1) {
-        return error::wrap(etype::os, errno);
+    if (setsockopt(m_fd, SOL_SOCKET, SO_SNDTIMEO, (const char*) &soTimeout, sizeof(soTimeout)) == SOCKET_ERROR) {
+        return error::wrap(etype::os, WSAGetLastError());
     }
     return error::nil;
 }

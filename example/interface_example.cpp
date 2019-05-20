@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <array>
-#include "net/interface.h"
+#include "netlib/interface.h"
 
 using namespace net;
 

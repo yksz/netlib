@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-#include "net/error.h"
+#include "netlib/error.h"
 
 namespace net {
 

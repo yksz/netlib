@@ -1,4 +1,4 @@
-#include "net/error.h"
+#include "netlib/error.h"
 
 #include <map>
 #if defined(_WIN32) || defined(_WIN64)
@@ -7,9 +7,9 @@
  #include <cerrno>
  #include <netdb.h>
 #endif // defined(_WIN32) || defined(_WIN64)
-#ifdef NET_USE_OPENSSL
+#ifdef NETLIB_USE_OPENSSL
  #include <openssl/err.h>
-#endif // NET_USE_OPENSSL
+#endif // NETLIB_USE_OPENSSL
 
 namespace net {
 
@@ -185,14 +185,14 @@ static const std::map<const error, const char*> emessages {
 };
 
 const char* error::Message(const error& err) {
-#ifdef NET_USE_OPENSSL
+#ifdef NETLIB_USE_OPENSSL
     if (err.type == etype::ssl) {
         const char* s = ERR_reason_error_string(err.code);
         if (s != nullptr) {
             return s;
         }
     }
-#endif // NET_USE_OPENSSL
+#endif // NETLIB_USE_OPENSSL
     auto it = emessages.find(err);
     if (it != emessages.end()) {
         return it->second;

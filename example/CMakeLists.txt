@@ -12,7 +12,7 @@ set(examples
     udp_client_example
     udp_server_example
 )
-if(NET_USE_OPENSSL)
+if(NETLIB_USE_OPENSSL)
     set(examples ${examples}
         https_client_example
         ssl_client_example

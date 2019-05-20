@@ -1,4 +1,4 @@
-#include "net/resolver.h"
+#include "netlib/resolver.h"
 #include <cassert>
 #if defined(_WIN32) || defined(_WIN64)
  #include <winsock2.h>
@@ -12,7 +12,7 @@
  #include <sys/types.h>
  #include <unistd.h>
 #endif // defined(_WIN32) || defined(_WIN64)
-#include "net/internal/init.h"
+#include "netlib/internal/init.h"
 
 namespace net {
 

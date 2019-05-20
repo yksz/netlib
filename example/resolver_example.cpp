@@ -1,7 +1,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
-#include "net/resolver.h"
+#include "netlib/resolver.h"
 
 using namespace net;
 

@@ -5,9 +5,9 @@
 #include <memory>
 #include <string>
 #include <openssl/ssl.h>
-#include "net/error.h"
-#include "net/stream.h"
-#include "net/tcp.h"
+#include "netlib/error.h"
+#include "netlib/stream.h"
+#include "netlib/tcp.h"
 
 namespace net {
 

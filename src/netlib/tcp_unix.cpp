@@ -1,4 +1,4 @@
-#include "net/tcp.h"
+#include "netlib/tcp.h"
 #include <cassert>
 #include <cerrno>
 #include <arpa/inet.h>
@@ -9,8 +9,8 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "net/internal/init.h"
-#include "net/resolver.h"
+#include "netlib/internal/init.h"
+#include "netlib/resolver.h"
 
 namespace net {
 

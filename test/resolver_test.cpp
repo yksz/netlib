@@ -1,4 +1,4 @@
-#include "net/resolver.h"
+#include "netlib/resolver.h"
 #include <string>
 #include <gtest/gtest.h>
 

@@ -1,4 +1,4 @@
-#include "net/stream.h"
+#include "netlib/stream.h"
 #include <cassert>
 
 namespace net {

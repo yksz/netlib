@@ -4,8 +4,8 @@
 #include <chrono>
 #include <memory>
 #include <thread>
-#include "net/resolver.h"
-#include "net/ssl.h"
+#include "netlib/resolver.h"
+#include "netlib/ssl.h"
 
 using namespace net;
 

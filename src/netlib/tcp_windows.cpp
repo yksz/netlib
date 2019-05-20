@@ -1,9 +1,9 @@
-#include "net/tcp.h"
+#include "netlib/tcp.h"
 #include <cassert>
 #include <mstcpip.h>
 #include <winsock2.h>
-#include "net/internal/init.h"
-#include "net/resolver.h"
+#include "netlib/internal/init.h"
+#include "netlib/resolver.h"
 
 namespace net {
 

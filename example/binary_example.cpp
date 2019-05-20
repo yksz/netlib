@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <iostream>
-#include "net/binary.h"
+#include "netlib/binary.h"
 
 using namespace net;
 

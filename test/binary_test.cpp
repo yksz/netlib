@@ -1,4 +1,4 @@
-#include "net/binary.h"
+#include "netlib/binary.h"
 #include <string>
 #include <gtest/gtest.h>
 

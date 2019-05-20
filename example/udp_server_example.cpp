@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
-#include "net/resolver.h"
-#include "net/udp.h"
+#include "netlib/resolver.h"
+#include "netlib/udp.h"
 
 using namespace net;
 

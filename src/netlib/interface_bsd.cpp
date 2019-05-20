@@ -1,4 +1,4 @@
-#include "net/interface.h"
+#include "netlib/interface.h"
 #include <cassert>
 #include <cerrno>
 #include <ifaddrs.h>

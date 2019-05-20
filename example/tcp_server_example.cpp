@@ -3,8 +3,8 @@
 #include <iostream>
 #include <memory>
 #include <thread>
-#include "net/resolver.h"
-#include "net/tcp.h"
+#include "netlib/resolver.h"
+#include "netlib/tcp.h"
 
 using namespace net;
 

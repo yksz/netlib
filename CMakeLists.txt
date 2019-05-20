@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 2.8.7)
-project(net CXX)
+project(netlib CXX)
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
-option(NET_USE_OPENSSL "Include SSL/TLS support" OFF)
+option(NETLIB_USE_OPENSSL "Include SSL/TLS support" OFF)
 
 option(build_tests "Build all of own tests" OFF)
 option(build_examples "Build example programs" OFF)
@@ -17,38 +17,38 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/src
 )
 set(source_files
-    ${PROJECT_SOURCE_DIR}/src/net/error.cpp
-    ${PROJECT_SOURCE_DIR}/src/net/binary.cpp
-    ${PROJECT_SOURCE_DIR}/src/net/interface.cpp
-    ${PROJECT_SOURCE_DIR}/src/net/resolver.cpp
-    ${PROJECT_SOURCE_DIR}/src/net/stream.cpp
+    ${PROJECT_SOURCE_DIR}/src/netlib/error.cpp
+    ${PROJECT_SOURCE_DIR}/src/netlib/binary.cpp
+    ${PROJECT_SOURCE_DIR}/src/netlib/interface.cpp
+    ${PROJECT_SOURCE_DIR}/src/netlib/resolver.cpp
+    ${PROJECT_SOURCE_DIR}/src/netlib/stream.cpp
 )
 if(WIN32)
     set(source_files ${source_files}
-        ${PROJECT_SOURCE_DIR}/src/net/interface_windows.cpp
-        ${PROJECT_SOURCE_DIR}/src/net/internal/init_windows.cpp
-        ${PROJECT_SOURCE_DIR}/src/net/tcp_windows.cpp
-        ${PROJECT_SOURCE_DIR}/src/net/udp_windows.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/interface_windows.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/internal/init_windows.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/tcp_windows.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/udp_windows.cpp
     )
 else() # UNIX
     set(source_files ${source_files}
-        ${PROJECT_SOURCE_DIR}/src/net/internal/init_unix.cpp
-        ${PROJECT_SOURCE_DIR}/src/net/tcp_unix.cpp
-        ${PROJECT_SOURCE_DIR}/src/net/udp_unix.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/internal/init_unix.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/tcp_unix.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/udp_unix.cpp
     )
     if(APPLE)
         set(source_files ${source_files}
-            ${PROJECT_SOURCE_DIR}/src/net/interface_bsd.cpp
+            ${PROJECT_SOURCE_DIR}/src/netlib/interface_bsd.cpp
         )
     else() # Linux
         set(source_files ${source_files}
-            ${PROJECT_SOURCE_DIR}/src/net/interface_linux.cpp
+            ${PROJECT_SOURCE_DIR}/src/netlib/interface_linux.cpp
         )
     endif()
 endif()
-if(NET_USE_OPENSSL)
+if(NETLIB_USE_OPENSSL)
     set(source_files ${source_files}
-        ${PROJECT_SOURCE_DIR}/src/net/ssl.cpp
+        ${PROJECT_SOURCE_DIR}/src/netlib/ssl.cpp
     )
 endif()
 # shared and static libraries
@@ -60,7 +60,7 @@ if(MINGW)
     target_link_libraries(${PROJECT_NAME} ws2_32 iphlpapi)
     target_link_libraries(${PROJECT_NAME}_static ws2_32 iphlpapi)
 endif()
-if(NET_USE_OPENSSL)
+if(NETLIB_USE_OPENSSL)
     target_link_libraries(${PROJECT_NAME} ssl crypto)
     target_link_libraries(${PROJECT_NAME}_static ssl crypto)
 endif()
@@ -68,13 +68,13 @@ endif()
 ### Install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 # install header files
-file(GLOB header_files ${PROJECT_SOURCE_DIR}/src/net/*.h)
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/include/net)
-install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/net)
+file(GLOB header_files ${PROJECT_SOURCE_DIR}/src/netlib/*.h)
+install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/include/netlib)
+install(FILES ${header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/netlib)
 # install internal header files
-file(GLOB internal_header_files ${PROJECT_SOURCE_DIR}/src/net/internal/*.h)
-install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/include/net/internal)
-install(FILES ${internal_header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/net/internal)
+file(GLOB internal_header_files ${PROJECT_SOURCE_DIR}/src/netlib/internal/*.h)
+install(DIRECTORY DESTINATION ${CMAKE_INSTALL_PREFIX}/include/netlib/internal)
+install(FILES ${internal_header_files} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/netlib/internal)
 
 ### Test
 if(build_tests)

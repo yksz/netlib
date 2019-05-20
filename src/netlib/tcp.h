@@ -4,9 +4,9 @@
 #include <atomic>
 #include <memory>
 #include <string>
-#include "net/error.h"
-#include "net/fd.h"
-#include "net/stream.h"
+#include "netlib/error.h"
+#include "netlib/fd.h"
+#include "netlib/stream.h"
 
 namespace net {
 
